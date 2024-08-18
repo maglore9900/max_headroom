@@ -1,11 +1,13 @@
-from modules import adapter, stt
+from modules import adapter, speak
 
-stt = stt.STT()
+
+sp = speak.Speak()
 ad = adapter.Adapter("openai")
 
 
 while True:
-    text = stt.listen()
+    text = sp.listen()
     response = ad.chat(text)
-    stt.speak(response)
+    sp.max_headroom(response)
+    
     print("Listening again...")
