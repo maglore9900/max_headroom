@@ -1,6 +1,6 @@
 this is a personal project to create a voice directed digital assistant based on the max headroom character.
 
-![alt text]([https://www.cartoonbrew.com/wp-content/uploads/2013/05/maxheadroom_main-1280x600.jpg])
+![alt text](https://www.cartoonbrew.com/wp-content/uploads/2013/05/maxheadroom_main-1280x600.jpg)
 
 written in python, using langchain, langgraph, etc.
 
