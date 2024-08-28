@@ -1,5 +1,4 @@
 from typing import TypedDict, Annotated, List, Union
-import json
 import operator
 from modules import adapter, spotify
 from langchain_core.agents import AgentAction, AgentFinish
@@ -13,8 +12,8 @@ import asyncio
 
 
 class Agent:
-    def __init__(self, model):
-        self.ad = adapter.Adapter(model)
+    def __init__(self):
+        self.ad = adapter.Adapter()
         self.sp = spotify.Spotify()
         self.llm = self.ad.llm_chat
         # self.final_answer_llm = self.llm.bind_tools(

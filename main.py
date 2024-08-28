@@ -6,14 +6,14 @@ asyncio.set_event_loop(loop)
 
 
 sp = speak.Speak()
-graph = agent.Agent("openai")
+graph = agent.Agent()
 
 
 while True:
+    print("Listening...")
     text = sp.listen()
     if text and "max" in text.lower():
         response = loop.run_until_complete(graph.invoke_agent(text))
         if response:
             sp.glitch_stream_output(response)
     
-    print("Listening again...")

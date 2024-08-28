@@ -56,20 +56,21 @@ class Speak:
       
     def listen(self):
         with self.microphone as source:
-            # Adjust for ambient noise
+            #! Adjust for ambient noise
             self.recognizer.adjust_for_ambient_noise(source, duration=1)
-            
-            print("Listening...")
-            audio = self.recognizer.listen(source)
-            
+            #! added 5 second timeout so ambient noise detection can compensate for music that started playing
+            audio = self.recognizer.listen(source, timeout=5)
             try:
+                
                 text = self.recognizer.recognize_google(audio)
                 print("You said: ", text)
                 return text
-            except sr.UnknownValueError:
-                print("Sorry, I didn't get that.")
-            except sr.RequestError as e:
-                print("Sorry, I couldn't request results; {0}".format(e)) 
+            except:
+                pass
+            # except sr.UnknownValueError:
+            #     print("Sorry, I didn't get that.")
+            # except sr.RequestError as e:
+            #     print("Sorry, I couldn't request results; {0}".format(e)) 
     
     def stream_output(self, text):
         import urllib.parse
@@ -152,7 +153,7 @@ class Speak:
 
             # Randomly adjust pitch
             # octaves = random.uniform(-0.5, 0.5)
-            octaves = random.uniform(-1, 1)
+            octaves = random.uniform(-0.5, 1)
             modified_chunk = change_pitch(audio_segment, octaves)
 
             if stream is None:
@@ -162,7 +163,7 @@ class Speak:
                                 rate=modified_chunk.frame_rate,
                                 output=True)
             
-            if random.random() < 0.01:  # 1% chance to trigger stutter
+            if random.random() < 0.001:  # 1% chance to trigger stutter
                 repeat_times = random.randint(2, 5)  # Repeat 2 to 5 times
                 for _ in range(repeat_times):
                     stream.write(modified_chunk.raw_data)

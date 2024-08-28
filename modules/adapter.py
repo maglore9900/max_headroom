@@ -5,8 +5,8 @@ env = environ.Env()
 environ.Env.read_env()
 
 class Adapter:
-    def __init__(self, llm_type):
-        self.llm_text = llm_type
+    def __init__(self):
+        self.llm_text = env("LLM_TYPE")
         if self.llm_text.lower() == "openai":
             from langchain_openai import OpenAIEmbeddings, OpenAI
             from langchain_openai import ChatOpenAI
@@ -15,16 +15,15 @@ class Adapter:
                 "answer the following request: {topic}"
             )
             self.llm_chat = ChatOpenAI(
-                temperature=0.3, model="gpt-4o-mini", openai_api_key=env("OPENAI_API_KEY")
+                temperature=0.3, model=env("OPENAI_MODEL"), openai_api_key=env("OPENAI_API_KEY")
             )
             self.embedding = OpenAIEmbeddings(model="text-embedding-ada-002")
         elif self.llm_text.lower() == "local":
             from langchain_community.llms import Ollama
             from langchain_community.embeddings import HuggingFaceBgeEmbeddings
             from langchain_community.chat_models import ChatOllama
-            llm_model = "llama3"
-            # llm_model = "notus"
-            self.llm = Ollama(base_url="http://10.0.0.231:11434", model=llm_model)
+            llm_model = env("OLLAMA_MODEL")
+            self.llm = Ollama(base_url=env("OLLAMA_URL"), model=llm_model)
             self.prompt = ChatPromptTemplate.from_template(
                 "answer the following request: {topic}"
             )
