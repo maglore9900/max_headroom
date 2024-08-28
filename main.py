@@ -15,5 +15,5 @@ while True:
     if text and "max" in text.lower():
         response = loop.run_until_complete(graph.invoke_agent(text))
         if response:
-            sp.glitch_stream_output(response)
+            sp.glitch_stream_output2(response)
     

@@ -58,10 +58,10 @@ class Speak:
         with self.microphone as source:
             #! Adjust for ambient noise
             self.recognizer.adjust_for_ambient_noise(source, duration=1)
-            #! added 5 second timeout so ambient noise detection can compensate for music that started playing
-            audio = self.recognizer.listen(source, timeout=5)
+            
             try:
-                
+                #! added 5 second timeout so ambient noise detection can compensate for music that started playing
+                audio = self.recognizer.listen(source, timeout=5)
                 text = self.recognizer.recognize_google(audio)
                 print("You said: ", text)
                 return text
@@ -207,58 +207,61 @@ class Speak:
         
         # Create the streaming URL
         streaming_url = f"http://localhost:7851/api/tts-generate-streaming?text={encoded_text}&voice={voice}&language={language}&output_file={output_file}"
-        
-        # Stream the audio data
-        response = requests.get(streaming_url, stream=True)
-        
-        # Initialize PyAudio
-        p = pyaudio.PyAudio()
-        stream = None
-        
-        # Process the audio stream in chunks
-        chunk_size = 1024 * 6  # Adjust chunk size if needed
-        audio_buffer = b''
-
-        for chunk in response.iter_content(chunk_size=chunk_size):
-            audio_buffer += chunk
-
-            if len(audio_buffer) < chunk_size:
-                continue
+        try:
+            # Stream the audio data
+            response = requests.get(streaming_url, stream=True)
             
-            audio_segment = AudioSegment(
-                data=audio_buffer,
-                sample_width=2,  # 2 bytes for 16-bit audio
-                frame_rate=24000,  # Assumed frame rate, adjust as necessary
-                channels=1  # Assuming mono audio
-            )
-
-            # Randomly adjust pitch
-            octaves = random.uniform(-1, 1)
-            modified_chunk = change_pitch(audio_segment, octaves)
-
-            if random.random() < 0.01:  # 1% chance to trigger stutter
-                repeat_times = random.randint(2, 5)  # Repeat 2 to 5 times
-                for _ in range(repeat_times):
-                    stream.write(modified_chunk.raw_data)
-
-            # Convert to PCM16 and 16kHz sample rate after the stutter effect
-            modified_chunk = convert_audio_format(modified_chunk, target_sample_rate=16000)
-
-            if stream is None:
-                # Define stream parameters
-                stream = p.open(format=pyaudio.paInt16,
-                                channels=1,
-                                rate=modified_chunk.frame_rate,
-                                output=True)
-
-            # Play the modified chunk
-            stream.write(modified_chunk.raw_data)
-
-            # Reset buffer
+            # Initialize PyAudio
+            p = pyaudio.PyAudio()
+            stream = None
+            
+            # Process the audio stream in chunks
+            chunk_size = 1024 * 6  # Adjust chunk size if needed
             audio_buffer = b''
 
-        # Final cleanup
-        if stream:
-            stream.stop_stream()
-            stream.close()
-        p.terminate()
+            for chunk in response.iter_content(chunk_size=chunk_size):
+                audio_buffer += chunk
+
+                if len(audio_buffer) < chunk_size:
+                    continue
+                
+                audio_segment = AudioSegment(
+                    data=audio_buffer,
+                    sample_width=2,  # 2 bytes for 16-bit audio
+                    frame_rate=24000,  # Assumed frame rate, adjust as necessary
+                    channels=1  # Assuming mono audio
+                )
+
+                # Randomly adjust pitch
+                octaves = random.uniform(-1, 1)
+                modified_chunk = change_pitch(audio_segment, octaves)
+
+                if random.random() < 0.01:  # 1% chance to trigger stutter
+                    repeat_times = random.randint(2, 5)  # Repeat 2 to 5 times
+                    for _ in range(repeat_times):
+                        stream.write(modified_chunk.raw_data)
+
+                # Convert to PCM16 and 16kHz sample rate after the stutter effect
+                modified_chunk = convert_audio_format(modified_chunk, target_sample_rate=16000)
+
+                if stream is None:
+                    # Define stream parameters
+                    stream = p.open(format=pyaudio.paInt16,
+                                    channels=1,
+                                    rate=modified_chunk.frame_rate,
+                                    output=True)
+
+                # Play the modified chunk
+                stream.write(modified_chunk.raw_data)
+
+                # Reset buffer
+                audio_buffer = b''
+
+            # Final cleanup
+            if stream:
+                stream.stop_stream()
+                stream.close()
+            p.terminate()
+        except:
+            self.engine.say(text)
+            self.engine.runAndWait()
