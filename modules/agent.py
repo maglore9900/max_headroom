@@ -1,6 +1,6 @@
 from typing import TypedDict, Annotated, List, Union
 import operator
-from modules import adapter, spotify, app_launcher
+from modules import adapter, spotify, app_launcher, windows_focus
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain.agents import create_openai_tools_agent
 from langchain import hub
@@ -16,6 +16,7 @@ class Agent:
         self.ad = adapter.Adapter()
         self.sp = spotify.Spotify()
         self.ap = app_launcher.AppLauncher()
+        self.wf = windows_focus.WindowFocusManager()
         self.llm = self.ad.llm_chat
         # self.final_answer_llm = self.llm.bind_tools(
         #     [self.rag_final_answer_tool], tool_choice="rag_final_answer"
@@ -28,7 +29,8 @@ class Agent:
             tools=[
                 # self.rag_final_answer_tool,
                 self.spotify,
-                self.app_launcher
+                self.app_launcher,
+                self.windows_focus
             ],
             prompt=self.prompt,
         )
@@ -62,6 +64,14 @@ class Agent:
         pass the name of the app to this tool as app_name
         """
     
+    @tool("windows_focus")
+    async def windows_focus(self, app_name: str):
+        """Use this tool to focus on a window on your computer. 
+        The user query will contain the app name, as well as focus, switch, show, or similar type words
+        pass the name of the app to this tool as app_name
+        """
+        return ""
+    
     # @tool("rag_final_answer")
     # async def rag_final_answer_tool(self, answer: str, source: str):
     #     """Returns a natural language response to the user in `answer`, and a
@@ -75,6 +85,7 @@ class Agent:
         self.graph.add_node("query_agent", self.run_query_agent)
         self.graph.add_node("spotify", self.spotify_tool)
         self.graph.add_node("app_launcher", self.app_launcher_tool)
+        self.graph.add_node("windows_focus", self.windows_focus_tool)
         # self.graph.add_node("rag_final_answer", self.rag_final_answer)
         # self.graph.add_node("error", self.rag_final_answer)
         self.graph.add_node("respond", self.respond)
@@ -89,10 +100,12 @@ class Agent:
                 # "error": "error",
                 "respond": "respond",
                 "app_launcher": "app_launcher",
+                "windows_focus": "windows_focus"
             },
         )
         self.graph.add_edge("spotify", END)
         self.graph.add_edge("app_launcher", END)
+        self.graph.add_edge("windows_focus", END)
         # self.graph.add_edge("error", END)
         # self.graph.add_edge("rag_final_answer", END)
         # self.graph.add_edge("query_agent", END)
@@ -136,13 +149,19 @@ class Agent:
         tool_action = state['agent_out'][0]
         app_name = tool_action.tool_input['app_name']
         print(f"app_name: {app_name}")
-        # print(f"search: {search}")
         self.ap.find_and_open_app(app_name)
+        
+    async def windows_focus_tool(self, state: str):
+        print("> windows_focus_tool")
+        print(f"state: {state}")
+        tool_action = state['agent_out'][0]
+        app_name = tool_action.tool_input['app_name']
+        print(f"app_name: {app_name}")
+        self.wf.bring_specific_instance_to_front(app_name)
         
     async def respond(self, answer: str):
         print("> respond")
         print(f"answer: {answer}")
-        # answer = answer.agent_out.return_values.get('output', None)
         agent_out = answer.get('agent_out')
         output_value = agent_out.return_values.get('output', None)
         return {"agent_out": output_value}
