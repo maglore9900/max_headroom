@@ -12,3 +12,5 @@ Note:
 2) this is designed to pull a custom voice from the alltalk project https://github.com/erew123/alltalk_tts, that is how I am cloning max headroom's voice. You can alter or simply not use this, it will currently fallback to pyttsx3.
 
 Will move more variables to the .env folders soon.
+
+.env is under the module folder for now
