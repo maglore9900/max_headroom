@@ -1,17 +1,19 @@
-from modules import adapter, speak, spotify
+from modules import agent, speak
+import asyncio
+
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
 
 
 sp = speak.Speak()
-ad = adapter.Adapter("openai")
-spot = spotify.Spotify()
+graph = agent.Agent("openai")
 
 
 while True:
     text = sp.listen()
     if text and "max" in text.lower():
-        response = ad.chat(text)
-        
-        # sp.max_headroom(response)
-        sp.glitch_stream_output(response)
+        response = loop.run_until_complete(graph.invoke_agent(text))
+        if response:
+            sp.glitch_stream_output(response)
     
     print("Listening again...")
