@@ -10,7 +10,6 @@ graph = agent.Agent()
 
 
 while True:
-    print("Listening...")
     text = sp.listen()
     if text and "max" in text.lower():
         response = loop.run_until_complete(graph.invoke_agent(text))

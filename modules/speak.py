@@ -56,21 +56,28 @@ class Speak:
       
     def listen(self):
         with self.microphone as source:
-            #! Adjust for ambient noise
+            # Adjust for ambient noise
             self.recognizer.adjust_for_ambient_noise(source, duration=1)
-            
+            print("Listening...")
             try:
-                #! added 5 second timeout so ambient noise detection can compensate for music that started playing
+                # Listen with a 5-second timeout
                 audio = self.recognizer.listen(source, timeout=5)
-                text = self.recognizer.recognize_google(audio)
-                print("You said: ", text)
-                return text
-            except:
-                pass
-            # except sr.UnknownValueError:
-            #     print("Sorry, I didn't get that.")
-            # except sr.RequestError as e:
-            #     print("Sorry, I couldn't request results; {0}".format(e)) 
+                try:
+                    text = self.recognizer.recognize_google(audio)
+                    print("You said: ", text)
+                    return text
+                except sr.UnknownValueError:
+                    print("Sorry, I didn't get that.")
+                    return None
+                except sr.RequestError as e:
+                    print("Sorry, I couldn't request results; {0}".format(e))
+                    return None
+            except sr.WaitTimeoutError:
+                print("Timeout. No speech detected.")
+                return None  
+
+
+ 
     
     def stream_output(self, text):
         import urllib.parse
