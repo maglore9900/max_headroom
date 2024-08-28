@@ -1,6 +1,6 @@
 from typing import TypedDict, Annotated, List, Union
 import operator
-from modules import adapter, spotify
+from modules import adapter, spotify, app_launcher
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain.agents import create_openai_tools_agent
 from langchain import hub
@@ -15,6 +15,7 @@ class Agent:
     def __init__(self):
         self.ad = adapter.Adapter()
         self.sp = spotify.Spotify()
+        self.ap = app_launcher.AppLauncher()
         self.llm = self.ad.llm_chat
         # self.final_answer_llm = self.llm.bind_tools(
         #     [self.rag_final_answer_tool], tool_choice="rag_final_answer"
@@ -27,6 +28,7 @@ class Agent:
             tools=[
                 # self.rag_final_answer_tool,
                 self.spotify,
+                self.app_launcher
             ],
             prompt=self.prompt,
         )
@@ -53,6 +55,13 @@ class Agent:
         Only use this tool if the user says Spotify in their query"""
         return ""
     
+    @tool("app_launcher")
+    async def app_launcher(self, app_name: str):
+        """Use this tool to launch an app or application on your computer. 
+        The user query will contain the app name, as well as open, launch, start, or similar type words
+        pass the name of the app to this tool as app_name
+        """
+    
     # @tool("rag_final_answer")
     # async def rag_final_answer_tool(self, answer: str, source: str):
     #     """Returns a natural language response to the user in `answer`, and a
@@ -65,6 +74,7 @@ class Agent:
     def setup_graph(self):
         self.graph.add_node("query_agent", self.run_query_agent)
         self.graph.add_node("spotify", self.spotify_tool)
+        self.graph.add_node("app_launcher", self.app_launcher_tool)
         # self.graph.add_node("rag_final_answer", self.rag_final_answer)
         # self.graph.add_node("error", self.rag_final_answer)
         self.graph.add_node("respond", self.respond)
@@ -78,9 +88,11 @@ class Agent:
                 # "rag_final_answer": "rag_final_answer",
                 # "error": "error",
                 "respond": "respond",
+                "app_launcher": "app_launcher",
             },
         )
         self.graph.add_edge("spotify", END)
+        self.graph.add_edge("app_launcher", END)
         # self.graph.add_edge("error", END)
         # self.graph.add_edge("rag_final_answer", END)
         # self.graph.add_edge("query_agent", END)
@@ -118,7 +130,15 @@ class Agent:
         else:
             print("Invalid command")
 
-
+    async def app_launcher_tool(self, state: str):
+        print("> app_launcher_tool")
+        print(f"state: {state}")
+        tool_action = state['agent_out'][0]
+        app_name = tool_action.tool_input['app_name']
+        print(f"app_name: {app_name}")
+        # print(f"search: {search}")
+        self.ap.find_and_open_app(app_name)
+        
     async def respond(self, answer: str):
         print("> respond")
         print(f"answer: {answer}")
