@@ -53,7 +53,7 @@ class Agent:
     
     @tool("spotify")
     async def spotify(self, command: str):
-        """Use this tool to control spotify, commands include: play, pause, next, previous, favorite, search
+        """Use this tool to control spotify, commands include: play, pause, stop, next, previous, favorite, search
         Only use this tool if the user says Spotify in their query"""
         return ""
     
@@ -138,8 +138,8 @@ class Agent:
             self.sp.previous_track()
         elif command == "favorite":
             self.sp.favorite_current_song()
-        elif command == "search":
-            self.sp.search_song_and_play(search)
+        # elif command == "search":
+        #     self.sp.search_song_and_play(search)
         else:
             print("Invalid command")
 

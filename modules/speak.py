@@ -10,6 +10,14 @@ from pydub import AudioSegment
 import random
 import urllib.parse
 
+import os
+import json
+import pyaudio
+from vosk import Model, KaldiRecognizer 
+import noisereduce as nr
+from numpy import frombuffer, int16
+import numpy as np
+
 class Speak:
     def __init__(self):
         self.url = "http://127.0.0.1:7851/api/tts-generate"
@@ -17,6 +25,11 @@ class Speak:
         self.microphone = sr.Microphone()
         self.engine = pyttsx3.init()
         self.engine.setProperty('rate', 150)
+        
+        self.model_path = os.path.join(os.path.dirname(__file__), "../models/vosk-model-en-us-0.42-gigaspeech")
+        self.model = Model(self.model_path)
+        self.recognizer = KaldiRecognizer(self.model, 16000)
+        
 
     def max_headroom(self, text):
         data = {
@@ -61,7 +74,7 @@ class Speak:
             print("Listening...")
             try:
                 # Listen with a 5-second timeout
-                audio = self.recognizer.listen(source, timeout=5)
+                audio = self.recognizer.listen(source, timeout=10)
                 try:
                     text = self.recognizer.recognize_google(audio)
                     print("You said: ", text)
@@ -76,7 +89,59 @@ class Speak:
                 print("Timeout. No speech detected.")
                 return None  
 
+    # def listen2(self):
+    #     p = pyaudio.PyAudio()
+    #     stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=8000)
+    #     stream.start_stream()
+    #     print("Listening...")
 
+    #     try:
+    #         while True:
+    #             data = stream.read(8000, exception_on_overflow=False)
+    #             filtered_data = nr.reduce_noise(y=frombuffer(data, dtype=int16), sr=16000).astype(int16).tobytes()
+
+    #             if self.recognizer.AcceptWaveform(filtered_data):
+    #                 result = json.loads(self.recognizer.Result())
+    #                 if result["text"]:
+    #                     print(f"Recognized: {result['text']}")
+    #                     return result['text']
+    #             else:
+    #                 pass
+    #     except KeyboardInterrupt:
+    #         print("Stopping...")
+    #     finally:
+    #         stream.stop_stream()
+    #         stream.close()
+    #         p.terminate()
+    
+    def listen2(self, noise_threshold=500):
+        p = pyaudio.PyAudio()
+        stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=8000)
+        stream.start_stream()
+        print("Listening...")
+
+        try:
+            while True:
+                data = stream.read(8000, exception_on_overflow=False)
+                filtered_data = nr.reduce_noise(y=frombuffer(data, dtype=int16), sr=16000).astype(int16).tobytes()
+
+                # Calculate RMS to detect ambient noise levels
+                rms_value = np.sqrt(np.mean(np.square(np.frombuffer(filtered_data, dtype=int16))))
+
+                if rms_value < noise_threshold:
+                    if self.recognizer.AcceptWaveform(filtered_data):
+                        result = json.loads(self.recognizer.Result())
+                        if result["text"]:
+                            print(f"Recognized: {result['text']}")
+                            return result['text']
+                else:
+                    print(f"Ambient noise detected: RMS {rms_value} exceeds threshold {noise_threshold}")
+        except KeyboardInterrupt:
+            print("Stopping...")
+        finally:
+            stream.stop_stream()
+            stream.close()
+            p.terminate()
  
     
     def stream_output(self, text):

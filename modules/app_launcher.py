@@ -5,7 +5,7 @@ from difflib import get_close_matches
 from datetime import datetime, timedelta
 
 class AppLauncher:
-    def __init__(self, search_paths=None, index_file='app_index.json'):
+    def __init__(self, search_paths=None, index_file='tmp/app_index.json'):
         if search_paths is None:
             search_paths = [
                 r'C:\Program Files',
