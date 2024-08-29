@@ -33,13 +33,6 @@ class Spotify:
             self.sp.pause_playback(device_id=device_id)
         except Exception as e:
             print(f"Failed to pause playback: {e}")
-    
-    def stop(self):
-        try:
-            device_id = self.get_active_device()
-            self.sp.pause_playback(device_id=device_id)
-        except Exception as e:
-            print(f"Failed to stop playback: {e}")
 
     def next_track(self):
         try:

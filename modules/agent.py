@@ -132,6 +132,8 @@ class Agent:
             self.sp.play()
         elif command == "pause":
             self.sp.pause()
+        elif command == "stop":
+            self.sp.pause()
         elif command == "next":
             self.sp.next_track()
         elif command == "previous":
