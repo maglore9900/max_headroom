@@ -55,13 +55,16 @@ class AppLauncher:
             self.index_applications()
 
     def find_and_open_app(self, app_name):
-        match = get_close_matches(app_name.lower(), self.index.keys(), n=1, cutoff=0.6)
+        try:
+            match = get_close_matches(app_name.lower(), self.index.keys(), n=1, cutoff=0.6)
 
-        if match:
-            app_path = self.index[match[0]]['path']
-            subprocess.Popen(app_path)  # Use Popen instead of run
-            print(f"Opening {match[0]} at {app_path}")
-        else:
-            print(f"No matching application found for '{app_name}'")
+            if match:
+                app_path = self.index[match[0]]['path']
+                subprocess.Popen(app_path)  # Use Popen instead of run
+                print(f"Opening {match[0]} at {app_path}")
+            else:
+                print(f"No matching application found for '{app_name}'")
+        except (FileNotFoundError, ValueError, KeyError):
+            print(f"Error opening application: {app_name}")
 
 
