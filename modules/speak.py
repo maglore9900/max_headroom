@@ -121,7 +121,7 @@ class Speak:
           
     def glitch_stream_output(self, text):
         def change_pitch(sound, octaves):
-            val = random.randint(0, 7)
+            val = random.randint(0, 10)
             if val == 1:
                 new_sample_rate = int(sound.frame_rate * (2.0 ** octaves))
                 return sound._spawn(sound.raw_data, overrides={'frame_rate': new_sample_rate}).set_frame_rate(sound.frame_rate)
@@ -174,7 +174,7 @@ class Speak:
                 octaves = random.uniform(-0.5, 1.5)
                 modified_chunk = change_pitch(audio_segment, octaves)
 
-                if random.random() < 0.01:  # 1% chance to trigger stutter
+                if random.random() < 0.001:  # 1% chance to trigger stutter
                     repeat_times = random.randint(2, 5)  # Repeat 2 to 5 times
                     for _ in range(repeat_times):
                         stream.write(modified_chunk.raw_data)
