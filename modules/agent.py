@@ -122,28 +122,38 @@ class Agent:
         return {"agent_out": agent_out}
 
     async def spotify_tool(self, state: str):
-        print("> spotify_tool")
-        print(f"state: {state}")
-        tool_action = state['agent_out'][0]
-        command = tool_action.tool_input['command']
-        print(f"command: {command}")
-        # print(f"search: {search}")
-        if command == "play":
-            self.sp.play()
-        elif command == "pause":
-            self.sp.pause()
-        elif command == "stop":
-            self.sp.pause()
-        elif command == "next":
-            self.sp.next_track()
-        elif command == "previous":
-            self.sp.previous_track()
-        elif command == "favorite":
-            self.sp.favorite_current_song()
-        # elif command == "search":
-        #     self.sp.search_song_and_play(search)
-        else:
-            print("Invalid command")
+        try:
+            print("> spotify_tool")
+            print(f"state: {state}")
+            tool_action = state['agent_out'][0]
+
+            # Inline lambda to get 'command' or 'self' from tool_input
+            command = (lambda x: x.get('command') or x.get('self'))(tool_action.tool_input)
+
+            if not command:
+                raise ValueError("No valid command found in tool_input")
+
+            print(f"command: {command}")
+
+            # Handling the command
+            if command == "play":
+                self.sp.play()
+            elif command == "pause":
+                self.sp.pause()
+            elif command == "stop":
+                self.sp.pause()
+            elif command == "next":
+                self.sp.next_track()
+            elif command == "previous":
+                self.sp.previous_track()
+            elif command == "favorite":
+                self.sp.favorite_current_song()
+            else:
+                print("Invalid command")
+        
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
 
     async def app_launcher_tool(self, state: str):
         print("> app_launcher_tool")

@@ -59,8 +59,9 @@ class AppLauncher:
 
         if match:
             app_path = self.index[match[0]]['path']
-            subprocess.run(app_path)
+            subprocess.Popen(app_path)  # Use Popen instead of run
             print(f"Opening {match[0]} at {app_path}")
         else:
             print(f"No matching application found for '{app_name}'")
+
 
