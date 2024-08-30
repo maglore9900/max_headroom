@@ -154,7 +154,7 @@ class Speak:
             stream = None
             
             # Process the audio stream in chunks
-            chunk_size = 1024 * 7  # Adjust chunk size if needed
+            chunk_size = 1024 * 8  # Adjust chunk size if needed
             audio_buffer = b''
 
             for chunk in response.iter_content(chunk_size=chunk_size):

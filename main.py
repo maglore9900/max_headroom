@@ -11,7 +11,7 @@ graph = agent.Agent()
 
 while True:
     text = sp.listen2()
-    if text and "max " in text.lower() or text and "mac " in text.lower():
+    if text and "hey" in text.lower() and "max " in text.lower() or text and "hey" in text.lower() and "mac " in text.lower():
         if "exit" in text.lower():
             break
         response = loop.run_until_complete(graph.invoke_agent(text))

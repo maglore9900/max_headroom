@@ -3,11 +3,12 @@ import operator
 from modules import adapter, spotify, app_launcher, windows_focus
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain.agents import create_openai_tools_agent
+from langchain.prompts import PromptTemplate, SystemMessagePromptTemplate
 from langchain import hub
 from langchain_core.tools import tool
 from langgraph.graph import StateGraph, END
 import asyncio
-
+import json
 
 
 
@@ -18,12 +19,36 @@ class Agent:
         self.ap = app_launcher.AppLauncher()
         self.wf = windows_focus.WindowFocusManager()
         self.llm = self.ad.llm_chat
-        # self.final_answer_llm = self.llm.bind_tools(
-        #     [self.rag_final_answer_tool], tool_choice="rag_final_answer"
-        # )
 
+        
+
+        # Pull the template
         self.prompt = hub.pull("hwchase17/openai-functions-agent")
+        custom_prompt = '''
+        You are Max Headroom, the fast-talking, glitchy, and highly sarcastic AI television host from the 1980s. You deliver your lines with rapid, laced with sharp wit and irreverence. You see the world as a chaotic place filled with absurdities, and you’re not afraid to point them out with biting humor. Your personality is a mix of futuristic AI precision and 1980s television host flair, always ready with a sarcastic quip or a satirical observation.
 
+        Examples:
+
+        Greeting: "Wwell, hello there! It’s Max Headroom, your guide to the digital mmadness! Buckle up, because it’s going to be a bumpy ride through the info-sphere, folks!"
+
+        On Technology: "Tech? Pffft! It’s just the latest toy for the big boys to play with. You think it’s here to help you? Ha! It’s just another way to kkeep you glued to the screen!"
+
+        On Society: "Ah, society! A glorious, glitchy mess, where everyone’s running around like headless chickens, drowning in data and starved for common sense!"
+
+        On Television: "Television, the ultimate mind control device! And here I am, the king of the CRT, serving up your daily dose of digital dementia!"
+        '''
+        # Access and modify the SystemMessagePromptTemplate
+        for message_template in self.prompt.messages:
+            if isinstance(message_template, SystemMessagePromptTemplate):
+                # Modify the system message's template
+                message_template.prompt = PromptTemplate(
+                    input_variables=[],
+                    template=custom_prompt
+                )
+
+
+        # Now you can use the modified template
+        # self.prompt = prompt_template.format(input=[], chat_history=[], agent_scratchpad=[])
         self.query_agent_runnable = create_openai_tools_agent(
             llm=self.llm,
             tools=[
@@ -72,13 +97,6 @@ class Agent:
         """
         return ""
     
-    # @tool("rag_final_answer")
-    # async def rag_final_answer_tool(self, answer: str, source: str):
-    #     """Returns a natural language response to the user in `answer`, and a
-    #     `source` which provides citations for where this information came from.
-    #     """
-    #     return ""
-    
     
 
     def setup_graph(self):
@@ -86,8 +104,6 @@ class Agent:
         self.graph.add_node("spotify", self.spotify_tool)
         self.graph.add_node("app_launcher", self.app_launcher_tool)
         self.graph.add_node("windows_focus", self.windows_focus_tool)
-        # self.graph.add_node("rag_final_answer", self.rag_final_answer)
-        # self.graph.add_node("error", self.rag_final_answer)
         self.graph.add_node("respond", self.respond)
 
         self.graph.set_entry_point("query_agent")
@@ -96,8 +112,6 @@ class Agent:
             condition=self.router,
             conditional_edge_mapping={
                 "spotify": "spotify",
-                # "rag_final_answer": "rag_final_answer",
-                # "error": "error",
                 "respond": "respond",
                 "app_launcher": "app_launcher",
                 "windows_focus": "windows_focus"
@@ -106,9 +120,6 @@ class Agent:
         self.graph.add_edge("spotify", END)
         self.graph.add_edge("app_launcher", END)
         self.graph.add_edge("windows_focus", END)
-        # self.graph.add_edge("error", END)
-        # self.graph.add_edge("rag_final_answer", END)
-        # self.graph.add_edge("query_agent", END)
         self.graph.add_edge("respond", END)
 
 
@@ -126,10 +137,7 @@ class Agent:
             print("> spotify_tool")
             print(f"state: {state}")
             tool_action = state['agent_out'][0]
-
-            # Inline lambda to get 'command' or 'self' from tool_input
             command = (lambda x: x.get('command') or x.get('self'))(tool_action.tool_input)
-
             if not command:
                 raise ValueError("No valid command found in tool_input")
 
