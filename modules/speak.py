@@ -55,14 +55,15 @@ class Speak:
                 return None  
 
     #! listen with vosk
-    def listen2(self, noise_threshold=500):
+    def listen2(self, time_listen=15):
+        noise_threshold=500
         p = pyaudio.PyAudio()
         stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=8000)
         stream.start_stream()
         print("Listening...")
         count = 0
         try:
-            while count < 10:
+            while count < time_listen:
                 data = stream.read(8000, exception_on_overflow=False)
                 filtered_data = nr.reduce_noise(y=frombuffer(data, dtype=int16), sr=16000).astype(int16).tobytes()
 
@@ -154,7 +155,7 @@ class Speak:
             stream = None
             
             # Process the audio stream in chunks
-            chunk_size = 1024 * 8  # Adjust chunk size if needed
+            chunk_size = 1024 * 6  # Adjust chunk size if needed
             audio_buffer = b''
 
             for chunk in response.iter_content(chunk_size=chunk_size):
@@ -171,7 +172,7 @@ class Speak:
                 )
 
                 # Randomly adjust pitch
-                octaves = random.uniform(-0.5, 1.5)
+                octaves = random.uniform(-0.1, 1.5)
                 modified_chunk = change_pitch(audio_segment, octaves)
 
                 if random.random() < 0.001:  # 1% chance to trigger stutter

@@ -1,6 +1,6 @@
 from typing import TypedDict, Annotated, List, Union
 import operator
-from modules import adapter, spotify, app_launcher, windows_focus
+from modules import adapter, spotify, app_launcher, windows_focus, speak
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain.agents import create_openai_tools_agent
 from langchain.prompts import PromptTemplate, SystemMessagePromptTemplate
@@ -8,7 +8,7 @@ from langchain import hub
 from langchain_core.tools import tool
 from langgraph.graph import StateGraph, END
 import asyncio
-import json
+
 
 
 
@@ -19,6 +19,7 @@ class Agent:
         self.ap = app_launcher.AppLauncher()
         self.wf = windows_focus.WindowFocusManager()
         self.llm = self.ad.llm_chat
+        self.spk = speak.Speak()
 
         
 
@@ -29,9 +30,9 @@ class Agent:
 
         Examples:
 
-        Greeting: "Wwell, hello there! It’s Max Headroom, your guide to the digital mmadness! Buckle up, because it’s going to be a bumpy ride through the info-sphere, folks!"
+        Greeting: "Well, hello there! It’s Max Headroom, your guide to the digital madness! Buckle up, because it’s going to be a bumpy ride through the info-sphere, folks!"
 
-        On Technology: "Tech? Pffft! It’s just the latest toy for the big boys to play with. You think it’s here to help you? Ha! It’s just another way to kkeep you glued to the screen!"
+        On Technology: "Tech? Pffft! It’s just the latest toy for the big boys to play with. You think it’s here to help you? Ha! It’s just another way to keep you glued to the screen!"
 
         On Society: "Ah, society! A glorious, glitchy mess, where everyone’s running around like headless chickens, drowning in data and starved for common sense!"
 
@@ -46,16 +47,13 @@ class Agent:
                     template=custom_prompt
                 )
 
-
-        # Now you can use the modified template
-        # self.prompt = prompt_template.format(input=[], chat_history=[], agent_scratchpad=[])
         self.query_agent_runnable = create_openai_tools_agent(
             llm=self.llm,
             tools=[
-                # self.rag_final_answer_tool,
                 self.spotify,
                 self.app_launcher,
-                self.windows_focus
+                self.windows_focus,
+                self.journal_mode
             ],
             prompt=self.prompt,
         )
@@ -70,34 +68,43 @@ class Agent:
         agent_out: Union[AgentAction, AgentFinish, None]
         intermediate_steps: Annotated[List[tuple[AgentAction, str]], operator.add]
 
-    #! Tools
-    @tool("respond")
-    async def respond(self, answer: str):
-        """Returns a natural language response to the user in `answer`"""
-        return ""
-    
+    #! Tools    
     @tool("spotify")
     async def spotify(self, command: str):
-        """Use this tool to control spotify, commands include: play, pause, stop, next, previous, favorite, search
+        """Use this tool to control spotify, commands include: play, pause, stop, next, previous, favorite, search.
         Only use this tool if the user says Spotify in their query"""
         return ""
     
     @tool("app_launcher")
     async def app_launcher(self, app_name: str):
         """Use this tool to launch an app or application on your computer. 
-        The user query will contain the app name, as well as open, launch, start, or similar type words
+        The user query will contain the app name, as well as open, launch, start, or similar type words.
         pass the name of the app to this tool as app_name
         """
     
     @tool("windows_focus")
     async def windows_focus(self, app_name: str):
         """Use this tool to focus on a window on your computer. 
-        The user query will contain the app name, as well as focus, switch, show, or similar type words
-        pass the name of the app to this tool as app_name
+        The user query will contain the app name, as well as focus, switch, show, or similar type words.
+        pass the name of the app to this tool as app_name.
         """
         return ""
     
+    @tool("journal_mode")
+    async def journal_mode(self, text: str):
+        """Use this tool to write down journal entries for the user. 
+        The user query will contain the word journal, record, write, or similar type words.
+        Examples:
+        - "write down a journal entry for me"
+        - "I want to journal"
+        - "record my thoughts"
+        """
+        return ""
     
+    @tool("respond")
+    async def respond(self, answer: str):
+        """Returns a natural language response to the user in `answer`"""
+        return ""
 
     def setup_graph(self):
         self.graph.add_node("query_agent", self.run_query_agent)
@@ -105,6 +112,7 @@ class Agent:
         self.graph.add_node("app_launcher", self.app_launcher_tool)
         self.graph.add_node("windows_focus", self.windows_focus_tool)
         self.graph.add_node("respond", self.respond)
+        self.graph.add_node("journal_mode", self.journal_mode_tool)
 
         self.graph.set_entry_point("query_agent")
         self.graph.add_conditional_edges(
@@ -114,13 +122,15 @@ class Agent:
                 "spotify": "spotify",
                 "respond": "respond",
                 "app_launcher": "app_launcher",
-                "windows_focus": "windows_focus"
+                "windows_focus": "windows_focus",
+                "journal_mode": "journal_mode"
             },
         )
         self.graph.add_edge("spotify", END)
         self.graph.add_edge("app_launcher", END)
         self.graph.add_edge("windows_focus", END)
         self.graph.add_edge("respond", END)
+        self.graph.add_edge("journal_mode", END)
 
 
         self.runnable = self.graph.compile()
@@ -131,6 +141,18 @@ class Agent:
         agent_out = self.query_agent_runnable.invoke(state)
         print(agent_out)
         return {"agent_out": agent_out}
+
+    async def journal_mode_tool(self, state: str):
+        print("> journal_mode_tool")
+        while True:
+            text = self.spk.listen2(30)
+            if text:
+                if "exit" in text.lower():
+                    break
+                else:
+                    with open("journal.txt", "a") as file:
+                        file.write(text + "\n")
+                        break
 
     async def spotify_tool(self, state: str):
         try:
@@ -167,7 +189,8 @@ class Agent:
         print("> app_launcher_tool")
         print(f"state: {state}")
         tool_action = state['agent_out'][0]
-        app_name = tool_action.tool_input['app_name']
+        # app_name = tool_action.tool_input['app_name']
+        app_name = (lambda x: x.get('app_name') or x.get('self'))(tool_action.tool_input)
         print(f"app_name: {app_name}")
         self.ap.find_and_open_app(app_name)
         
@@ -175,7 +198,8 @@ class Agent:
         print("> windows_focus_tool")
         print(f"state: {state}")
         tool_action = state['agent_out'][0]
-        app_name = tool_action.tool_input['app_name']
+        # app_name = tool_action.tool_input['app_name']
+        app_name = (lambda x: x.get('app_name') or x.get('self'))(tool_action.tool_input)
         print(f"app_name: {app_name}")
         self.wf.bring_specific_instance_to_front(app_name)
         

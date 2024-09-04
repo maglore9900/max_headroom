@@ -1,20 +1,16 @@
-from modules import agent, speak
+from modules import agent
 import asyncio
 
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
-
-
-sp = speak.Speak()
 graph = agent.Agent()
 
-
 while True:
-    text = sp.listen2()
+    text = graph.spk.listen2()
     if text and "hey" in text.lower() and "max " in text.lower() or text and "hey" in text.lower() and "mac " in text.lower():
         if "exit" in text.lower():
             break
         response = loop.run_until_complete(graph.invoke_agent(text))
         if response:
-            sp.glitch_stream_output(response)
+            graph.spk.glitch_stream_output(response)
     
