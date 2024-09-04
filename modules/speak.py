@@ -85,6 +85,51 @@ class Speak:
             stream.stop_stream()
             stream.close()
             p.terminate()
+            
+    def dynamic_threshold(self, rms_values, factor=1.5):
+        """Adjust noise threshold dynamically based on the median RMS."""
+        median_rms = np.median(rms_values)
+        return median_rms * factor
+    
+    def listen3(self, time_listen=15):
+        noise_threshold = 500  # Initial static threshold
+        rms_values = []  # To track RMS values over time
+        p = pyaudio.PyAudio()
+        stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=8000)
+        stream.start_stream()
+        print("Listening...")
+
+        count = 0
+        try:
+            while count < time_listen:
+                data = stream.read(8000, exception_on_overflow=False)
+                filtered_data = nr.reduce_noise(y=frombuffer(data, dtype=int16), sr=16000).astype(int16).tobytes()
+
+                # Calculate RMS to detect ambient noise levels
+                rms_value = np.sqrt(np.mean(np.square(np.frombuffer(filtered_data, dtype=int16))))
+                rms_values.append(rms_value)
+
+                # Dynamically adjust the noise threshold based on previous RMS values
+                noise_threshold = self.dynamic_threshold(rms_values)
+
+                if rms_value < noise_threshold:
+                    if self.recognizer.AcceptWaveform(filtered_data):
+                        result = json.loads(self.recognizer.Result())
+                        if result["text"]:
+                            print(f"Recognized: {result['text']}")
+                            return result['text']
+                else:
+                    print(f"Ambient noise detected: RMS {rms_value} exceeds threshold {noise_threshold:.2f}")
+
+                count += 1
+
+        except KeyboardInterrupt:
+            print("Stopping...")
+        finally:
+            stream.stop_stream()
+            stream.close()
+            p.terminate()
+    
  
     def stream_output(self, text):
         import urllib.parse

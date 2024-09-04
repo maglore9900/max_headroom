@@ -6,7 +6,7 @@ asyncio.set_event_loop(loop)
 graph = agent.Agent()
 
 while True:
-    text = graph.spk.listen2()
+    text = graph.spk.listen3()
     if text and "hey" in text.lower() and "max " in text.lower() or text and "hey" in text.lower() and "mac " in text.lower():
         if "exit" in text.lower():
             break
