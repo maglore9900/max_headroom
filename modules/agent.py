@@ -72,7 +72,7 @@ class Agent:
     @tool("spotify")
     async def spotify(self, command: str):
         """Use this tool to control spotify, commands include: play, pause, stop, next, previous, favorite, search.
-        Only use this tool if the user says Spotify in their query"""
+        Use this tool if the user says Spotify, or music, or similiar words in their query followed by a command."""
         return ""
     
     @tool("app_launcher")
