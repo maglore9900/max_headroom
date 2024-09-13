@@ -1,6 +1,6 @@
 from typing import TypedDict, Annotated, List, Union
 import operator
-from modules import adapter, spotify, app_launcher, windows_focus, speak
+from modules import adapter, spotify, app_launcher, windows_focus, sp_test2
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain.agents import create_openai_tools_agent
 from langchain.prompts import PromptTemplate, SystemMessagePromptTemplate
@@ -8,8 +8,8 @@ from langchain import hub
 from langchain_core.tools import tool
 from langgraph.graph import StateGraph, END
 import asyncio
-
-
+import time
+import subprocess
 
 
 class Agent:
@@ -19,13 +19,11 @@ class Agent:
         self.ap = app_launcher.AppLauncher()
         self.wf = windows_focus.WindowFocusManager()
         self.llm = self.ad.llm_chat
-        self.spk = speak.Speak()
-
-        
-
+        # self.spk = speak.Speak()
+        self.spk = sp_test2.Speak(model="whisper")
         # Pull the template
         self.prompt = hub.pull("hwchase17/openai-functions-agent")
-        custom_prompt = '''
+        self.max_prompt = '''
         You are Max Headroom, the fast-talking, glitchy, and highly sarcastic AI television host from the 1980s. You deliver your lines with rapid, laced with sharp wit and irreverence. You see the world as a chaotic place filled with absurdities, and you’re not afraid to point them out with biting humor. Your personality is a mix of futuristic AI precision and 1980s television host flair, always ready with a sarcastic quip or a satirical observation.
 
         Examples:
@@ -37,15 +35,17 @@ class Agent:
         On Society: "Ah, society! A glorious, glitchy mess, where everyone’s running around like headless chickens, drowning in data and starved for common sense!"
 
         On Television: "Television, the ultimate mind control device! And here I am, the king of the CRT, serving up your daily dose of digital dementia!"
+        
+        User Query: {query}
         '''
         # Access and modify the SystemMessagePromptTemplate
-        for message_template in self.prompt.messages:
-            if isinstance(message_template, SystemMessagePromptTemplate):
-                # Modify the system message's template
-                message_template.prompt = PromptTemplate(
-                    input_variables=[],
-                    template=custom_prompt
-                )
+        # for message_template in self.prompt.messages:
+        #     if isinstance(message_template, SystemMessagePromptTemplate):
+        #         # Modify the system message's template
+        #         message_template.prompt = PromptTemplate(
+        #             input_variables=[],
+        #             template=custom_prompt
+        #         )
 
         self.query_agent_runnable = create_openai_tools_agent(
             llm=self.llm,
@@ -53,7 +53,8 @@ class Agent:
                 self.spotify,
                 self.app_launcher,
                 self.windows_focus,
-                self.journal_mode
+                self.journal_mode,
+                self.set_timer,
             ],
             prompt=self.prompt,
         )
@@ -105,6 +106,14 @@ class Agent:
     async def respond(self, answer: str):
         """Returns a natural language response to the user in `answer`"""
         return ""
+    
+    @tool("set_timer")
+    async def set_timer(self, time: str):
+        """Sets a timer for the user
+        convert the user provided time to seconds and then start the timer
+        Use this tool when the user says 'set timer' or similar words in their query.
+        """
+        return ""
 
     def setup_graph(self):
         self.graph.add_node("query_agent", self.run_query_agent)
@@ -113,6 +122,7 @@ class Agent:
         self.graph.add_node("windows_focus", self.windows_focus_tool)
         self.graph.add_node("respond", self.respond)
         self.graph.add_node("journal_mode", self.journal_mode_tool)
+        self.graph.add_node("set_timer", self.timer_tool)
 
         self.graph.set_entry_point("query_agent")
         self.graph.add_conditional_edges(
@@ -123,7 +133,8 @@ class Agent:
                 "respond": "respond",
                 "app_launcher": "app_launcher",
                 "windows_focus": "windows_focus",
-                "journal_mode": "journal_mode"
+                "journal_mode": "journal_mode",
+                "set_timer": "set_timer"
             },
         )
         self.graph.add_edge("spotify", END)
@@ -131,10 +142,23 @@ class Agent:
         self.graph.add_edge("windows_focus", END)
         self.graph.add_edge("respond", END)
         self.graph.add_edge("journal_mode", END)
+        self.graph.add_edge("set_timer", END)
 
 
         self.runnable = self.graph.compile()
 
+    async def timer_tool(self, state: str):
+        try:
+            print("> spotify_tool")
+            print(f"state: {state}")
+            tool_action = state['agent_out'][0]
+            command = (lambda x: x.get('command') or x.get('self'))(tool_action.tool_input)
+            if not command:
+                raise ValueError("No valid command found in tool_input")
+            subprocess.run(["python", "modules/timer.py", command])
+        except Exception as e:
+            print(f"An error occurred: {e}")
+        
     async def run_query_agent(self, state: list):
         print("> run_query_agent")
         print(f"state: {state}")
@@ -145,7 +169,7 @@ class Agent:
     async def journal_mode_tool(self, state: str):
         print("> journal_mode_tool")
         while True:
-            text = self.spk.listen2(30)
+            text = self.spk.listen(30)
             if text:
                 if "exit" in text.lower():
                     break
@@ -205,10 +229,12 @@ class Agent:
         
     async def respond(self, answer: str):
         print("> respond")
-        print(f"answer: {answer}")
+        # print(f"answer: {answer}")
         agent_out = answer.get('agent_out')
         output_value = agent_out.return_values.get('output', None)
-        return {"agent_out": output_value}
+        max = self.llm.invoke(self.max_prompt.format(query=output_value))
+        # print(f"max: {max.content}")
+        return {"agent_out": max.content}
     
     async def rag_final_answer(self, state: list):
         print("> rag final_answer")
