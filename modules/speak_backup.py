@@ -89,7 +89,7 @@ class Speak:
     #                         return result['text']
     #             else:
     #                 print(f"Ambient noise detected: RMS {rms_value} exceeds threshold {noise_threshold}")
-    #             count += 1
+    #             
     #     except KeyboardInterrupt:
     #         print("Stopping...")
     #     finally:

@@ -7,134 +7,123 @@ import speech_recognition as sr
 import pyttsx3
 import os
 import random
+from pydub import AudioSegment
 import urllib.parse
 import requests
-from pydub import AudioSegment
+import json
+# from numpy import frombuffer, int16
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 class Speak:
     def __init__(self, model="whisper"):
         self.url = "http://127.0.0.1:7851/api/tts-generate"
+        
         self.microphone = sr.Microphone()
         self.engine = pyttsx3.init()
         self.engine.setProperty('rate', 150)
         self.model_name = model
         self.sample_rate = 16000
         self.chunk_size = 1024
-        self.noise_threshold = 500
         
-        # Initialize transcription models
+        self.noise_threshold = 500  # Threshold to detect ambient noise
+        
+        # Initialize Vosk and Whisper models
         if self.model_name == "vosk":
             self.model_path = os.path.join(os.path.dirname(__file__), "../models/vosk-model-en-us-0.42-gigaspeech")
             self.model = Model(self.model_path)
             self.recognizer = KaldiRecognizer(self.model, 16000)
         elif self.model_name == "whisper":
             self.whisper_model_path = "large-v2"
-            self.whisper_model = WhisperModel(self.whisper_model_path, device="cuda")  # Adjust if no CUDA
+            self.recognizer = WhisperModel(self.whisper_model_path, device="cuda")  # Adjust if you don't have a CUDA-compatible GPU
+            # self.recognizer = None
         else:
             self.recognizer = sr.Recognizer()
 
-    def listen_to_microphone(self, time_listen=10):
-        """Function to listen to the microphone input and return raw audio data."""
+    def listen3(self, time_listen=10):
+        """
+        Streams audio from the microphone and applies noise cancellation.
+        """
+        counter = 0
         p = pyaudio.PyAudio()
         stream = p.open(format=pyaudio.paInt16, channels=1, rate=self.sample_rate, input=True, frames_per_buffer=self.chunk_size)
         stream.start_stream()
         print("Listening...")
-
-        audio_data = b""
-        ambient_noise_data = b""
         
         try:
-            for i in range(int(self.sample_rate / self.chunk_size * time_listen)):
-                audio_chunk = stream.read(self.chunk_size)
-                audio_data += audio_chunk
-
-                # Capture ambient noise in the first 2 seconds
-                if i < int(self.sample_rate / self.chunk_size * 2):  # First 2 seconds
-                    ambient_noise_data += audio_chunk
-
+            while counter < time_listen:
+                # Read audio data from the stream
+                audio_data = stream.read(8000, exception_on_overflow=False)
+                # Convert the audio data to a numpy array of int16
+                audio_np = np.frombuffer(audio_data, dtype=np.int16)
+                # Apply noise reduction
+                reduced_noise = nr.reduce_noise(y=audio_np, sr=self.sample_rate)
+                # Calculate RMS to detect ambient noise levels
+                rms_value = np.sqrt(np.mean(np.square(reduced_noise)))
+                if rms_value < self.noise_threshold:
+                    # Pass the reduced noise (still in numpy format) to the transcoder
+                    self.transcoder(reduced_noise.tobytes())
+                else:
+                    print(f"Ambient noise detected: RMS {rms_value} exceeds threshold {self.noise_threshold}")
+                counter += 1
+        except KeyboardInterrupt:
+            print("Stopping...")
         finally:
+            # Clean up the stream resources
             stream.stop_stream()
             stream.close()
             p.terminate()
 
-        return audio_data, ambient_noise_data
-    
-    def apply_noise_cancellation(self, audio_data, ambient_noise):
-        """Apply noise cancellation to the given audio data, using ambient noise from the first 2 seconds."""
-        # Convert to NumPy array (normalize to [-1, 1])
-        audio_np = np.frombuffer(audio_data, np.int16).astype(np.float32) / 32768.0
-        ambient_noise_np = np.frombuffer(ambient_noise, np.int16).astype(np.float32) / 32768.0
-
-        # Use ambient noise as noise profile
-        reduced_noise = nr.reduce_noise(y=audio_np, sr=self.sample_rate, y_noise=ambient_noise_np)
-
-        # Convert back to int16 after noise reduction for compatibility with Whisper
-        reduced_noise_int16 = (reduced_noise * 32768).astype(np.int16)
-
-        return reduced_noise_int16.tobytes()  # Return as bytes
-
-    def transcribe(self, audio_data):
-        """Transcribe the audio data using the selected model."""
-        if self.model_name == "whisper":
-            # # Whisper expects float32 data
-            # # Convert int16 PCM back to float32
-            # audio_np = np.frombuffer(audio_data, np.int16).astype(np.float32) / 32768.0
-            # # Transcribe using Whisper model
-            # segments, _ = self.whisper_model.transcribe(audio_np, beam_size=5)
-            # transcription = " ".join([segment.text for segment in segments])
-            # print(f"Whisper Transcription: {transcription}")
-            # return transcription
-            # Whisper expects float32 data
-            energy_threshold=0.001
-            audio_np = np.frombuffer(audio_data, np.int16).astype(np.float32) / 32768.0
-
-            # Calculate energy of the audio to determine if it should be transcribed
-            energy = np.mean(np.abs(audio_np))
-
-            # Only transcribe if energy exceeds the threshold
-            if energy > energy_threshold:
-                # print(f"Audio energy ({energy}) exceeds threshold ({energy_threshold}), proceeding with transcription.")
-                segments, _ = self.whisper_model.transcribe(audio_np, beam_size=5)
-                transcription = " ".join([segment.text for segment in segments])
-                print(f"Whisper Transcription: {transcription}")
-                return transcription
-            else:
-                # print(f"Audio energy ({energy}) is below the threshold ({energy_threshold}), skipping transcription.")
-                return ""
-        elif self.model_name == "vosk":
-            # Convert audio data to bytes for Vosk
+    def transcoder(self, audio_data):
+        """
+        Transcodes audio data to text using the specified model.
+        """
+        if self.model_name == "vosk":
             if self.recognizer.AcceptWaveform(audio_data):
-                result = self.recognizer.Result()
-                print(f"Vosk Transcription: {result}")
-                return result
-        else:
-            # Fallback to default recognizer (for example, speech_recognition module)
-            recognizer = sr.Recognizer()
-            with sr.AudioFile(audio_data) as source:
-                audio = recognizer.record(source)
-                try:
-                    transcription = recognizer.recognize_google(audio)
-                    print(f"Google Transcription: {transcription}")
-                    return transcription
-                except sr.UnknownValueError:
-                    print("Google could not understand audio")
-                except sr.RequestError as e:
-                    print(f"Could not request results; {e}")
+                    result = json.loads(self.recognizer.Result())
+                    if result["text"]:
+                        print(f"Recognized: {result['text']}")
+                        return result['text']
+                    return result
+        elif self.model_name == "whisper":
 
-    def listen(self, time_listen=8):
-        """Main transcoder function that handles listening, noise cancellation, and transcription."""
-        # Listen to the microphone and get both raw audio and ambient noise
-        raw_audio, ambient_noise = self.listen_to_microphone(time_listen)
+            result, _ = self.recognizer.transcribe(audio_data, beam_size=5)
+            return result['text']
+        else:
+            result = self.recognizer.recognize_google(audio_data)
+            return result
+
         
-        # Apply noise cancellation using the ambient noise from the first 2 seconds
-        clean_audio = self.apply_noise_cancellation(raw_audio, ambient_noise=ambient_noise)
+    # def vosk_transcription(self):
+    #     """
+    #     Handles Vosk-based transcription of streamed audio with noise cancellation.
+    #     """
+    #     recognizer = KaldiRecognizer(self.vosk_model, self.sample_rate)
+    #     stream = self.stream_with_noise_cancellation()
         
-        # Transcribe the clean audio
-        transcription = self.transcribe(clean_audio)
+    #     for audio_chunk in stream:
+    #         if recognizer.AcceptWaveform(audio_chunk):
+    #             result = recognizer.Result()
+    #             print(result)  # Handle or process the transcription result
+
+    # def whisper_transcription(self):
+    #     """
+    #     Handles Faster-Whisper-based transcription of streamed audio with noise cancellation.
+    #     """
+    #     stream = self.stream_with_noise_cancellation()
         
-        return transcription
+    #     for audio_chunk in stream:
+    #         # Transcribe the cleaned audio using faster-whisper
+    #         result, _ = self.whisper_model.transcribe(audio_chunk, beam_size=5)
+    #         print(result['text'])  # Handle or process the transcription result
+            
+    # def listen(self):
+    #     if self.model == "vosk":
+    #         self.vosk_transcription()
+    #     elif self.model == "whisper":
+    #         self.whisper_transcription()
+    #     else:
+    #         raise ValueError("Invalid model specified. Please specify either 'vosk' or 'whisper'.")
 
     def glitch_stream_output(self, text):
         def change_pitch(sound, octaves):
@@ -220,8 +209,10 @@ class Speak:
         except:
             self.engine.say(text)
             self.engine.runAndWait()
-            
 # Example usage:
-# sp = Speak(model="vosk")  # or "vosk" or "google"
-# transcription = sp.transcoder(time_listen=10)
-# print("Final Transcription:", transcription)
+# sp = Speak(vosk_model_path="path_to_vosk_model", whisper_model_path="large-v2")
+# sp.vosk_transcription()  # To start Vosk transcription
+# sp.whisper_transcription()  # To start Faster-Whisper transcription
+sp = Speak()
+# sp.glitch_stream_output("Hello, world!")
+sp.listen3()

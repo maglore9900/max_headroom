@@ -1,6 +1,6 @@
 from typing import TypedDict, Annotated, List, Union
 import operator
-from modules import adapter, spotify, app_launcher, windows_focus, sp_test2
+from modules import adapter, speak, spotify, app_launcher, windows_focus
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain.agents import create_openai_tools_agent
 from langchain.prompts import PromptTemplate, SystemMessagePromptTemplate
@@ -19,8 +19,7 @@ class Agent:
         self.ap = app_launcher.AppLauncher()
         self.wf = windows_focus.WindowFocusManager()
         self.llm = self.ad.llm_chat
-        # self.spk = speak.Speak()
-        self.spk = sp_test2.Speak(model="whisper")
+        self.spk = speak.Speak(model="whisper")
         # Pull the template
         self.prompt = hub.pull("hwchase17/openai-functions-agent")
         self.max_prompt = '''
