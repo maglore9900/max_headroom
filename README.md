@@ -4,7 +4,15 @@ this is a personal project to create a voice directed digital assistant based on
 
 written in python, using langchain, langgraph, etc.
 
-it currently will respond as an LLM like usual, but can also control spotify
+written to work on Windows. Agent and logic will run on linux but tools are currently windows only.
+
+it currently will respond as an LLM like usual, but also has the following capabilities:
+
+- can also control spotify
+- can open applications on windows
+- can change the focused window
+- set timer
+- coming soon:  journalling in markdown with save target for obsidian
 
 this is a fun work in progress. if you want to use it and or develop for it be my guest. would love to have more tools designed.
 

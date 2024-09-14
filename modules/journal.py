@@ -44,6 +44,8 @@ class Journal:
             Ensure that the tone remains neutral, and avoid using 'I' or 'my' in the notes.
             
             The format MUST be in markdown
+            
+            Only use the information provided by the query. If you dont have information for a section dont try to make it up.
             """
     
         self.chat_template = ChatPromptTemplate.from_messages(
@@ -62,6 +64,7 @@ class Journal:
     def journal(self, text):
         message = self.chat_template.format_messages(text=text)
         response = self.journal_llm.invoke(message)
-        return response
+        print(response)
+        # return response
 
 

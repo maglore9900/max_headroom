@@ -152,9 +152,14 @@ class Agent:
             print(f"state: {state}")
             tool_action = state['agent_out'][0]
             command = (lambda x: x.get('command') or x.get('self'))(tool_action.tool_input)
-            if not command:
-                raise ValueError("No valid command found in tool_input")
-            subprocess.run(["python", "modules/timer.py", command])
+            try:
+                if not command:
+                    raise ValueError("No valid command found in tool_input")
+                subprocess.run(["python", "timer.py", command])
+                # process = subprocess.Popen(["python", "modules/timer.py", command], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            except Exception as e:
+                print(f"An error occurred with timer: {e}")
+
         except Exception as e:
             print(f"An error occurred: {e}")
         
