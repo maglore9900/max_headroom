@@ -12,7 +12,7 @@ it currently will respond as an LLM like usual, but also has the following capab
 - can open applications on windows
 - can change the focused window
 - set timer
-- coming soon:  journalling in markdown with save target for obsidian
+- coming soon:  journalling in markdown, with a save target for obsidian
 
 this is a fun work in progress. if you want to use it and or develop for it be my guest. would love to have more tools designed.
 
@@ -20,6 +20,7 @@ Note:
 
 1) this will work with openai or ollama models. you will need to set up the .env for that as well as spotify
 2) this is designed to pull a custom voice from the alltalk project https://github.com/erew123/alltalk_tts, that is how I am cloning max headroom's voice. You can alter or simply not use this, it will currently fallback to pyttsx3.
+3) speech-to-text can use google, vosk, or faster-whisper. faster-whisper is currently the default and optimal method.
 
 Will move more variables to the .env folders soon.
 
