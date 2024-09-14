@@ -9,7 +9,7 @@ while True:
     text = graph.spk.listen()
     # if text:
         # print(f"User: {text}")
-    if text and "hey" in text.lower() and "max" in text.lower() or text and "hey" in text.lower() and "mac" in text.lower():
+    if text and "hey" in text.lower() and "max" in text.lower() or text and "hey" in text.lower() and "mac" in text.lower()or text and "amax" in text.lower():
         if "exit" in text.lower():
             break
         print("agent invoked")

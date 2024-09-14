@@ -51,7 +51,7 @@ class Speak:
                 audio_data += audio_chunk
 
                 # Capture ambient noise in the first 2 seconds
-                if i < int(self.sample_rate / self.chunk_size * 2):  # First 2 seconds
+                if i < int(self.sample_rate / self.chunk_size * 1):  # First 1 seconds
                     ambient_noise_data += audio_chunk
 
         finally:

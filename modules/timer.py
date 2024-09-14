@@ -22,6 +22,7 @@ import argparse
 from plyer import notification
 
 def start_timer(seconds):
+    seconds = int(seconds)  # Convert to integer
     print(f"Timer started for {seconds} seconds...")
     time.sleep(seconds)  # Sleep for the desired time
     notification.notify(

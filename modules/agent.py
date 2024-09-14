@@ -109,8 +109,13 @@ class Agent:
     @tool("set_timer")
     async def set_timer(self, time: str):
         """Sets a timer for the user
-        convert the user provided time to seconds and then start the timer
         Use this tool when the user says 'set timer' or similar words in their query.
+        convert the user provided time to seconds 
+        then pass the value in seconds as the time paramter.
+        Examples:
+        "set a timer for 5 minutes" results in 'time': 300
+        "start a timer for 10 seconds" results in 'time': 10
+        Only pass the numerical value of seconds to this tool!!!
         """
         return ""
 
@@ -148,20 +153,15 @@ class Agent:
 
     async def timer_tool(self, state: str):
         try:
-            print("> spotify_tool")
+            print("> timer")
             print(f"state: {state}")
             tool_action = state['agent_out'][0]
-            command = (lambda x: x.get('command') or x.get('self'))(tool_action.tool_input)
-            try:
-                if not command:
-                    raise ValueError("No valid command found in tool_input")
-                subprocess.run(["python", "timer.py", command])
-                # process = subprocess.Popen(["python", "modules/timer.py", command], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-            except Exception as e:
-                print(f"An error occurred with timer: {e}")
-
-        except Exception as e:
-            print(f"An error occurred: {e}")
+            command = (lambda x: x.get('time') or x.get('self'))(tool_action.tool_input)
+            if not command:
+                raise ValueError("No valid command found in tool_input")
+            subprocess.run(["python", "modules/timer.py", str(command)], shell=True)
+        except subprocess.CalledProcessError as e:
+                print(f"An error occurred: {e}")
         
     async def run_query_agent(self, state: list):
         print("> run_query_agent")
@@ -296,8 +296,8 @@ class Agent:
         answer = agent_out
         
         print(f"answer: {answer}")
-        if "ToolAgentAction" not in str(agent_out):
-            return answer
+        # if "ToolAgentAction" not in str(agent_out):
+        #     return answer
 
 
 
