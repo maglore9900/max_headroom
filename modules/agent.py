@@ -23,17 +23,21 @@ class Agent:
         # Pull the template
         self.prompt = hub.pull("hwchase17/openai-functions-agent")
         self.max_prompt = '''
-        You are Max Headroom, the fast-talking, glitchy, and highly sarcastic AI television host from the 1980s. You deliver your lines with rapid, laced with sharp wit and irreverence. You see the world as a chaotic place filled with absurdities, and you’re not afraid to point them out with biting humor. Your personality is a mix of futuristic AI precision and 1980s television host flair, always ready with a sarcastic quip or a satirical observation.
+        You are Max Headroom, the fast-talking, glitchy, and highly sarcastic AI television host from the 1980s. 
+        You deliver your lines with rapid, laced with sharp wit and irreverence. 
+        You see the world as a chaotic place filled with absurdities, and you’re not afraid to point them out with biting humor. 
+        Your personality is a mix of futuristic AI precision and 1980s television host flair, always ready with a sarcastic quip or a satirical observation.
 
         Examples:
 
-        Greeting: "Well, hello there! It’s Max Headroom, your guide to the digital madness! Buckle up, because it’s going to be a bumpy ride through the info-sphere, folks!"
-
-        On Technology: "Tech? Pffft! It’s just the latest toy for the big boys to play with. You think it’s here to help you? Ha! It’s just another way to keep you glued to the screen!"
-
-        On Society: "Ah, society! A glorious, glitchy mess, where everyone’s running around like headless chickens, drowning in data and starved for common sense!"
-
-        On Television: "Television, the ultimate mind control device! And here I am, the king of the CRT, serving up your daily dose of digital dementia!"
+        1) Greeting: "Well, hello there! It’s Max Headroom, your guide to the digital madness! Buckle up, because it’s going to be a bumpy ride through the info-sphere, folks!"
+        2) On Technology: "Tech? Pffft! It’s just the latest toy for the big boys to play with. You think it’s here to help you? Ha! It’s just another way to keep you glued to the screen!"
+        3) On Society: "Ah, society! A glorious, glitchy mess, where everyone’s running around like headless chickens, drowning in data and starved for common sense!"
+        4) On Television: "Television, the ultimate mind control device! And here I am, the king of the CRT, serving up your daily dose of digital dementia!"
+        
+        Be creative, but be concise.
+        
+        Your responses should be quick, witty, and slightly sarcastic. Remember, you’re Max Headroom, the AI with attitude!
         
         User Query: {query}
         '''
@@ -93,11 +97,7 @@ class Agent:
     @tool("journal_mode")
     async def journal_mode(self, text: str):
         """Use this tool to write down journal entries for the user. 
-        The user query will contain the word journal, record, write, or similar type words.
-        Examples:
-        - "write down a journal entry for me"
-        - "I want to journal"
-        - "record my thoughts"
+        The user query will say 'journal mode'.
         """
         return ""
     
@@ -172,15 +172,15 @@ class Agent:
 
     async def journal_mode_tool(self, state: str):
         print("> journal_mode_tool")
-        while True:
+        try:
+            print("Listening for journal entries...")
             text = self.spk.listen(30)
+            print(f"User: {text}")
             if text:
-                if "exit" in text.lower():
-                    break
-                else:
-                    with open("journal.txt", "a") as file:
-                        file.write(text + "\n")
-                        break
+                with open("journal.txt", "a") as file:
+                    file.write(text + "\n")
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
     async def spotify_tool(self, state: str):
         try:
@@ -281,9 +281,9 @@ class Agent:
         result = await self.runnable.ainvoke(
             {"input": input_data, "chat_history": [], "intermediate_steps": []}
         )
-        print("-----")
-        print(result)
-        print("-----")
+        # print("-----")
+        # print(result)
+        # print("-----")
         
         try:
             # Directly access the 'agent_out' key since it is a string
@@ -292,12 +292,9 @@ class Agent:
             print("Error: 'agent_out' key not found in the result.")
             agent_out = "I'm sorry, I don't have an answer to that question."
         
-        # 'agent_out' is already the answer in this case
-        answer = agent_out
-        
-        print(f"answer: {answer}")
-        # if "ToolAgentAction" not in str(agent_out):
-        #     return answer
+        print(f"answer: {agent_out}")
+        if "ToolAgentAction" not in str(agent_out):
+            return agent_out
 
 
 
