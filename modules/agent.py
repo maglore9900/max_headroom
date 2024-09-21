@@ -107,7 +107,7 @@ class Agent:
         return ""
     
     @tool("set_timer")
-    async def set_timer(self, time: str):
+    async def set_timer(self, time: int):
         """Sets a timer for the user
         Use this tool when the user says 'set timer' or similar words in their query.
         convert the user provided time to seconds 
@@ -159,7 +159,7 @@ class Agent:
             command = (lambda x: x.get('time') or x.get('self'))(tool_action.tool_input)
             if not command:
                 raise ValueError("No valid command found in tool_input")
-            subprocess.run(["python", "modules/timer.py", str(command)], shell=True)
+            subprocess.Popen(["python", "modules/timer_clippy.py", str(command)], shell=True)
         except subprocess.CalledProcessError as e:
                 print(f"An error occurred: {e}")
         
@@ -295,6 +295,7 @@ class Agent:
         print(f"answer: {agent_out}")
         if "ToolAgentAction" not in str(agent_out):
             return agent_out
+        
 
 
 
