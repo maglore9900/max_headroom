@@ -17,7 +17,7 @@ class Agent:
         self.ap = app_launcher.AppLauncher()
         self.wf = windows_focus.WindowFocusManager()
         self.llm = self.ad.llm_chat
-        self.spk = speak.Speak(model=env("LISTEN_MODEL"))
+        self.spk = speak.Speak(env)
         self.prompt = hub.pull("hwchase17/openai-functions-agent")
         self.char = env("CHARACTER").lower()
         self.char_prompt = getattr(prompts, self.char, "You are a helpful assistant. User Query: {query}")

@@ -2,6 +2,8 @@ this is a personal project to create a voice directed digital assistant based on
 
 ![alt text](https://www.cartoonbrew.com/wp-content/uploads/2013/05/maxheadroom_main-1280x600.jpg)
 
+#SUMMARY
+
 written in python, using langchain, langgraph, etc.
 
 written to work on Windows. Agent and logic will run on linux but tools are currently windows only.
@@ -26,7 +28,7 @@ Will move more variables to the .env folders soon.
 
 .env is under the module folder for now
 
-INSTALLATION
+#INSTALLATION
 
 so basically the steps are pretty simple
 
@@ -38,3 +40,35 @@ so basically the steps are pretty simple
 - then copy example_env.txt to `.env`
 - open that, and put in your info, like openai key or ollama or whatever
 - then run `python main.py` to start the whole thing up
+
+
+
+#TOOLS
+
+##Spotify
+
+you will need get your spotify credentials in order to have Max control your spotify software.
+
+you can find information on getting that information here: https://developer.spotify.com/documentation/web-api/concepts/apps
+
+max can take the following commands: play, pause, stop, next, previous, favorite
+
+*note: you can say really any words that are similiar, max will attempt to read your intent and use the right command
+
+##Window Focus
+
+this tool brings the focus of whatever app you name to the front, it will not open an app
+
+*note: only works on windows
+
+##Open App
+
+this tool will open an application. when you run max it will create an index of the apps installed on your system
+
+*note: only works on windows
+
+##Timer
+
+this tool will set a timer with a popup. you tell max to set a time for X time, it will convert it to seconds on the backend and create the timer.
+
+the default timer will have a "clippy" popup, with potentially custom text

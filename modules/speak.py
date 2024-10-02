@@ -12,15 +12,16 @@ from pydub import AudioSegment
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 class Speak:
-    def __init__(self, model="whisper"):
-        self.url = "http://127.0.0.1:7851/api/tts-generate"
+    def __init__(self, env):
+        self.url = env("STREAM_SPEAK_URL")
         self.microphone = sr.Microphone()
         self.engine = pyttsx3.init()
         self.engine.setProperty('rate', 150)
-        self.model_name = model.lower()
+        self.model_name = env("LISTEN_MODEL".lower(), default="whisper")
         self.sample_rate = 16000
         self.chunk_size = 1024
         self.noise_threshold = 500
+        
         
         # Initialize transcription models
         if self.model_name == "whisper":

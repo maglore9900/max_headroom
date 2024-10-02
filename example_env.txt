@@ -1,13 +1,16 @@
-OPENAI_API_KEY=''
-#LLM_TYPE will take openai, local, or hybrid
-LLM_TYPE='openai' 
-OPENAI_MODEL='gpt-4o-mini'
+OPENAI_API_KEY = ''
+#LLM_TYPE will take openai, local
+LLM_TYPE = 'openai' 
+OPENAI_MODEL = 'gpt-4o-mini'
 #OLLAMA_MODEL will take any model you can load in ollama
-OLLAMA_MODEL='gemma2' 
-OLLAMA_URL='http://localhost:11434' 
-CHARACTER='max' 
+OLLAMA_MODEL = 'gemma2' 
+OLLAMA_URL = 'http://localhost:11434' 
+#CHARACTER will take any character prompt you have in the modules/prompts.py file. 'max' or 'none' are the default options
+CHARACTER = 'max'
 #LISTEN_MODEL will take whisper or google, whisper is the default option and best for most cases
-LISTEN_MODEL='whisper' 
+LISTEN_MODEL='whisper'
+#STREAM SPEAK URL is using the default url for Alltalk. If you dont have all talk you can ignore this, if you want to use a different service, simply replace the url
+STREAM_SPEAK_URL = 'http://127.0.0.1:7851/api/tts-generate'
 SPOTIFY_CLIENT_ID = ''
 SPOTIFY_CLIENT_SECRET = ''
 SPOTIFY_REDIRECT_URI = 'http://localhost:8888/callback'
