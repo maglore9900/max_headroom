@@ -2,7 +2,7 @@ this is a personal project to create a voice directed digital assistant based on
 
 ![alt text](https://www.cartoonbrew.com/wp-content/uploads/2013/05/maxheadroom_main-1280x600.jpg)
 
-#SUMMARY
+# SUMMARY
 
 written in python, using langchain, langgraph, etc.
 
@@ -24,11 +24,7 @@ Note:
 2) this is designed to pull a custom voice from the alltalk project https://github.com/erew123/alltalk_tts, that is how I am cloning max headroom's voice. You can alter or simply not use this, it will currently fallback to pyttsx3 aka a robot voice.
 3) speech-to-text can use google, or faster-whisper. faster-whisper is currently the default and optimal method.
 
-Will move more variables to the .env folders soon.
-
-.env is under the module folder for now
-
-#INSTALLATION
+# INSTALLATION
 
 so basically the steps are pretty simple
 
@@ -41,11 +37,9 @@ so basically the steps are pretty simple
 - open that, and put in your info, like openai key or ollama or whatever
 - then run `python main.py` to start the whole thing up
 
+# TOOLS
 
-
-#TOOLS
-
-##Spotify
+## Spotify
 
 you will need get your spotify credentials in order to have Max control your spotify software.
 
@@ -53,21 +47,21 @@ you can find information on getting that information here: https://developer.spo
 
 max can take the following commands: play, pause, stop, next, previous, favorite
 
-*note: you can say really any words that are similiar, max will attempt to read your intent and use the right command
+***note: you can say really any words that are similiar, max will attempt to read your intent and use the right command**
 
-##Window Focus
+## Window Focus
 
 this tool brings the focus of whatever app you name to the front, it will not open an app
 
-*note: only works on windows
+***note: only works on windows**
 
-##Open App
+## Open App
 
 this tool will open an application. when you run max it will create an index of the apps installed on your system
 
-*note: only works on windows
+***note: only works on windows**
 
-##Timer
+## Timer
 
 this tool will set a timer with a popup. you tell max to set a time for X time, it will convert it to seconds on the backend and create the timer.
 
