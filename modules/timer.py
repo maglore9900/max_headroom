@@ -1,15 +1,3 @@
-# import time
-# from win10toast import ToastNotifier
-
-# def start_timer(seconds):
-#     print(f"Timer started for {seconds} seconds...")
-#     time.sleep(seconds)
-#     toaster = ToastNotifier()
-#     toaster.show_toast("Timer Finished", "Your time is up!", duration=10)
-
-# # Example: Set a timer for 60 seconds
-# start_timer(5)
-
 import time
 from plyer import notification
 

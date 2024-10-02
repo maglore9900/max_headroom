@@ -3,12 +3,10 @@ import operator
 from modules import adapter, speak, prompts, spotify, app_launcher, windows_focus
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain.agents import create_openai_tools_agent
-from langchain.prompts import PromptTemplate, SystemMessagePromptTemplate
 from langchain import hub
 from langchain_core.tools import tool
 from langgraph.graph import StateGraph, END
 import asyncio
-import time
 import subprocess
 
 

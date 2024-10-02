@@ -1,5 +1,9 @@
 from modules import agent
 import asyncio
+import environ
+
+env = environ.Env()
+environ.Env.read_env()
 
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
