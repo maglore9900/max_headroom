@@ -17,3 +17,4 @@ python-vlc
 plyer
 noisereduce
 vosk
+faster-whisper
