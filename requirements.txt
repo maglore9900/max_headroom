@@ -16,3 +16,4 @@ python-docx
 python-vlc
 plyer
 noisereduce
+vosk
