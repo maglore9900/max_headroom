@@ -11,27 +11,27 @@ import subprocess
 
 
 class Agent:
-    def __init__(self):
-        self.ad = adapter.Adapter()
-        self.sp = spotify.Spotify()
+    def __init__(self, env, op):
+        self.ad = adapter.Adapter(env)
+        self.sp = spotify.Spotify(env)
         self.ap = app_launcher.AppLauncher()
         self.wf = windows_focus.WindowFocusManager()
         self.llm = self.ad.llm_chat
         self.spk = speak.Speak(model="whisper")
         self.prompt = hub.pull("hwchase17/openai-functions-agent")
-        # self.char_prompt = prompts.brain
-        self.char_prompt = prompts.max
+        self.char = env("CHARACTER").lower()
+        self.char_prompt = getattr(prompts, self.char, "You are a helpful assistant. User Query: {query}")
 
+        
 
+        tools = [self.set_timer, self.spotify, self.journal_mode]
+        if op == "windows":
+            tools.append(self.app_launcher)
+            tools.append(self.windows_focus)
+            
         self.query_agent_runnable = create_openai_tools_agent(
             llm=self.llm,
-            tools=[
-                self.spotify,
-                self.app_launcher,
-                self.windows_focus,
-                self.journal_mode,
-                self.set_timer,
-            ],
+            tools=tools,
             prompt=self.prompt,
         )
         self.graph = StateGraph(self.AgentState)

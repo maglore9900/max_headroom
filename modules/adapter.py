@@ -1,11 +1,11 @@
-import environ
+# import environ
 from langchain_core.prompts import ChatPromptTemplate
 
-env = environ.Env()
-environ.Env.read_env()
+# env = environ.Env()
+# environ.Env.read_env()
 
 class Adapter:
-    def __init__(self):
+    def __init__(self, env):
         self.llm_text = env("LLM_TYPE")
         if self.llm_text.lower() == "openai":
             from langchain_openai import OpenAIEmbeddings, OpenAI

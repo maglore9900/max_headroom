@@ -1,13 +1,31 @@
 from modules import agent
 import asyncio
 import environ
+import os
 
 env = environ.Env()
 environ.Env.read_env()
 
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
-graph = agent.Agent()
+
+
+if os.name == "nt":
+    print("windows")
+    op = "windows"
+elif os.name == "posix":
+    # Further check to differentiate between Linux and macOS
+    if 'linux' in os.uname().sysname.lower():
+        print("linux")
+        op = "linux"
+    elif 'darwin' in os.uname().sysname.lower():
+        op = "macos"
+    else:
+        exit("Unknown operating system.")
+else:
+    exit("Unknown operating system.")
+
+graph = agent.Agent(env,op)
 
 while True:
     text = graph.spk.listen()

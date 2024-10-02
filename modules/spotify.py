@@ -5,8 +5,8 @@ from requests.exceptions import ConnectionError, HTTPError
 import time
 import functools
 
-env = environ.Env()
-environ.Env.read_env()
+# env = environ.Env()
+# environ.Env.read_env()
 
 def handle_spotify_errors_and_device(func):
     @functools.wraps(func)
@@ -35,7 +35,13 @@ def handle_spotify_errors_and_device(func):
     return wrapper
 
 class Spotify:
-    def __init__(self):
+    def __init__(self, env):
+        spotify_client_id = env("spotify_client_id", default=None)
+        spotify_client_secret = env("spotify_client_secret", default=None)
+        spotify_redirect_uri = env("spotify_redirect_uri", default=None)
+        if not (spotify_client_id and spotify_client_secret and spotify_redirect_uri):
+            print("Spotify environment variables missing. Skipping Spotify initialization.")
+            return
         self.auth_manager = SpotifyOAuth(
             client_id=env("spotify_client_id"),
             client_secret=env("spotify_client_secret"),
