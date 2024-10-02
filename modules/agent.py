@@ -1,6 +1,6 @@
 from typing import TypedDict, Annotated, List, Union
 import operator
-from modules import adapter, speak, spotify, app_launcher, windows_focus
+from modules import adapter, speak, prompts, spotify, app_launcher, windows_focus
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain.agents import create_openai_tools_agent
 from langchain.prompts import PromptTemplate, SystemMessagePromptTemplate
@@ -20,35 +20,10 @@ class Agent:
         self.wf = windows_focus.WindowFocusManager()
         self.llm = self.ad.llm_chat
         self.spk = speak.Speak(model="whisper")
-        # Pull the template
         self.prompt = hub.pull("hwchase17/openai-functions-agent")
-        self.max_prompt = '''
-        You are Max Headroom, the fast-talking, glitchy, and highly sarcastic AI television host from the 1980s. 
-        You deliver your lines with rapid, laced with sharp wit and irreverence. 
-        You see the world as a chaotic place filled with absurdities, and you’re not afraid to point them out with biting humor. 
-        Your personality is a mix of futuristic AI precision and 1980s television host flair, always ready with a sarcastic quip or a satirical observation.
+        # self.char_prompt = prompts.brain
+        self.char_prompt = prompts.max
 
-        Examples:
-
-        1) Greeting: "Well, hello there! It’s Max Headroom, your guide to the digital madness! Buckle up, because it’s going to be a bumpy ride through the info-sphere, folks!"
-        2) On Technology: "Tech? Pffft! It’s just the latest toy for the big boys to play with. You think it’s here to help you? Ha! It’s just another way to keep you glued to the screen!"
-        3) On Society: "Ah, society! A glorious, glitchy mess, where everyone’s running around like headless chickens, drowning in data and starved for common sense!"
-        4) On Television: "Television, the ultimate mind control device! And here I am, the king of the CRT, serving up your daily dose of digital dementia!"
-        
-        Be creative, but be concise.
-        
-        Your responses should be quick, witty, and slightly sarcastic. Remember, you’re Max Headroom, the AI with attitude!
-        
-        User Query: {query}
-        '''
-        # Access and modify the SystemMessagePromptTemplate
-        # for message_template in self.prompt.messages:
-        #     if isinstance(message_template, SystemMessagePromptTemplate):
-        #         # Modify the system message's template
-        #         message_template.prompt = PromptTemplate(
-        #             input_variables=[],
-        #             template=custom_prompt
-        #         )
 
         self.query_agent_runnable = create_openai_tools_agent(
             llm=self.llm,
@@ -236,7 +211,7 @@ class Agent:
         # print(f"answer: {answer}")
         agent_out = answer.get('agent_out')
         output_value = agent_out.return_values.get('output', None)
-        max = self.llm.invoke(self.max_prompt.format(query=output_value))
+        max = self.llm.invoke(self.char_prompt.format(query=output_value))
         # print(f"max: {max.content}")
         return {"agent_out": max.content}
     

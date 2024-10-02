@@ -1,8 +1,6 @@
 import noisereduce as nr
 import numpy as np
 import pyaudio
-from vosk import Model, KaldiRecognizer
-from faster_whisper import WhisperModel
 import speech_recognition as sr
 import pyttsx3
 import os
@@ -26,12 +24,15 @@ class Speak:
         
         # Initialize transcription models
         if self.model_name == "vosk":
+            from vosk import Model, KaldiRecognizer
             self.model_path = os.path.join(os.path.dirname(__file__), "../models/vosk-model-en-us-0.42-gigaspeech")
             self.model = Model(self.model_path)
             self.recognizer = KaldiRecognizer(self.model, 16000)
         elif self.model_name == "whisper":
+            from faster_whisper import WhisperModel
             self.whisper_model_path = "large-v2"
-            self.whisper_model = WhisperModel(self.whisper_model_path, device="cuda")  # Adjust if no CUDA
+            self.whisper_model = WhisperModel(self.whisper_model_path, device="cuda")  # Mvidia GPU mode
+            # self.whisper_model = WhisperModel(self.whisper_model_path, device="cpu")  # CPU mode
         else:
             self.recognizer = sr.Recognizer()
 

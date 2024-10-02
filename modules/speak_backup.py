@@ -1,199 +1,141 @@
-import requests
-import winsound
-import speech_recognition as sr
-import pyttsx3 
-import os
-import vlc
-import time
+import noisereduce as nr
+import numpy as np
 import pyaudio
-from pydub import AudioSegment
+from vosk import Model, KaldiRecognizer
+from faster_whisper import WhisperModel
+import speech_recognition as sr
+import pyttsx3
+import os
 import random
 import urllib.parse
-
-import os
-import json
-import pyaudio
-# from vosk import Model, KaldiRecognizer 
-import noisereduce as nr
-from numpy import frombuffer, int16
-import numpy as np
-
-from faster_whisper import WhisperModel
+import requests
+from pydub import AudioSegment
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 class Speak:
-    def __init__(self):
+    def __init__(self, model="whisper"):
         self.url = "http://127.0.0.1:7851/api/tts-generate"
-        self.recognizer = sr.Recognizer()
         self.microphone = sr.Microphone()
         self.engine = pyttsx3.init()
         self.engine.setProperty('rate', 150)
-        
-        # self.model_path = os.path.join(os.path.dirname(__file__), "../models/vosk-model-en-us-0.42-gigaspeech")
-        # self.model = Model(self.model_path)
-        # self.recognizer = KaldiRecognizer(self.model, 16000)
-        
-        self.model_path = "large-v2"  # Use the appropriate faster-whisper model path
-        self.model = WhisperModel(self.model_path, device="cuda")
+        self.model_name = model
         self.sample_rate = 16000
-        self.channels = 1
-        self.chunk = 1024  # Number of frames per buffer
-        self.noise_threshold = 500  # Threshold to detect ambient noise
+        self.chunk_size = 1024
+        self.noise_threshold = 500
         
-      
-    #! listen with google  
-    def listen(self):
-        with self.microphone as source:
-            # Adjust for ambient noise
-            self.recognizer.adjust_for_ambient_noise(source, duration=1)
-            print("Listening...")
-            try:
-                # Listen with a 5-second timeout
-                audio = self.recognizer.listen(source, timeout=10)
-                try:
-                    text = self.recognizer.recognize_google(audio)
-                    print("You said: ", text)
-                    return text
-                except sr.UnknownValueError:
-                    print("Sorry, I didn't get that.")
-                    return None
-                except sr.RequestError as e:
-                    print("Sorry, I couldn't request results; {0}".format(e))
-                    return None
-            except sr.WaitTimeoutError:
-                print("Timeout. No speech detected.")
-                return None  
+        # Initialize transcription models
+        if self.model_name == "vosk":
+            self.model_path = os.path.join(os.path.dirname(__file__), "../models/vosk-model-en-us-0.42-gigaspeech")
+            self.model = Model(self.model_path)
+            self.recognizer = KaldiRecognizer(self.model, 16000)
+        elif self.model_name == "whisper":
+            self.whisper_model_path = "large-v2"
+            self.whisper_model = WhisperModel(self.whisper_model_path, device="cuda")  # Adjust if no CUDA
+        else:
+            self.recognizer = sr.Recognizer()
 
-    # #! listen with vosk
-    # def listen2(self, time_listen=15):
-    #     noise_threshold=500
-    #     p = pyaudio.PyAudio()
-    #     stream = p.open(format=pyaudio.paInt16, channels=1, rate=16000, input=True, frames_per_buffer=8000)
-    #     stream.start_stream()
-    #     print("Listening...")
-    #     count = 0
-    #     try:
-    #         while count < time_listen:
-    #             data = stream.read(8000, exception_on_overflow=False)
-    #             filtered_data = nr.reduce_noise(y=frombuffer(data, dtype=int16), sr=16000).astype(int16).tobytes()
-
-    #             # Calculate RMS to detect ambient noise levels
-    #             rms_value = np.sqrt(np.mean(np.square(np.frombuffer(filtered_data, dtype=int16))))
-
-    #             if rms_value < noise_threshold:
-    #                 if self.recognizer.AcceptWaveform(filtered_data):
-    #                     result = json.loads(self.recognizer.Result())
-    #                     if result["text"]:
-    #                         print(f"Recognized: {result['text']}")
-    #                         return result['text']
-    #             else:
-    #                 print(f"Ambient noise detected: RMS {rms_value} exceeds threshold {noise_threshold}")
-    #             
-    #     except KeyboardInterrupt:
-    #         print("Stopping...")
-    #     finally:
-    #         stream.stop_stream()
-    #         stream.close()
-    #         p.terminate()
-            
-    #! Listen with Faster Whisper
-    def listen3(self, duration=10):
-        """ Listens to the microphone for a specific duration and transcribes the audio using faster-whisper, with noise suppression """
+    def listen_to_microphone(self, time_listen=10):
+        """Function to listen to the microphone input and return raw audio data."""
         p = pyaudio.PyAudio()
-
+        stream = p.open(format=pyaudio.paInt16, channels=1, rate=self.sample_rate, input=True, frames_per_buffer=self.chunk_size)
+        stream.start_stream()
         print("Listening...")
 
-        # Open a stream to capture audio input from the microphone
-        stream = p.open(format=pyaudio.paInt16, 
-                        channels=self.channels, 
-                        rate=self.sample_rate, 
-                        input=True, 
-                        frames_per_buffer=self.chunk)
+        audio_data = b""
+        ambient_noise_data = b""
+        
+        try:
+            for i in range(int(self.sample_rate / self.chunk_size * time_listen)):
+                audio_chunk = stream.read(self.chunk_size)
+                audio_data += audio_chunk
 
-        frames = []
-        transcribed_text = []
+                # Capture ambient noise in the first 2 seconds
+                if i < int(self.sample_rate / self.chunk_size * 1):  # First 1 seconds
+                    ambient_noise_data += audio_chunk
 
-        for _ in range(0, int(self.sample_rate / self.chunk * duration)):
-            data = stream.read(self.chunk)
-            audio_data = frombuffer(data, dtype=int16)
+        finally:
+            stream.stop_stream()
+            stream.close()
+            p.terminate()
 
-            # Apply noise reduction only if there's valid audio data
-            if np.any(audio_data):  # Check if audio data contains non-zero values
-                reduced_noise_data = nr.reduce_noise(y=audio_data, sr=self.sample_rate)
-
-                # Calculate RMS value, ensuring no invalid data (NaN) is used
-                if np.any(reduced_noise_data):  # Check for valid noise-reduced data
-                    rms_value = np.sqrt(np.mean(np.square(reduced_noise_data)))
-
-                    # Only add frames that are below the noise threshold (i.e., filter out ambient noise)
-                    if not np.isnan(rms_value) and rms_value < self.noise_threshold:
-                        frames.append(reduced_noise_data.astype(int16).tobytes())
-                else:
-                    print("Invalid reduced noise data encountered.")
-            else:
-                print("Invalid or zero audio data encountered.")
-
-        # Stop and close the audio stream
-        stream.stop_stream()
-        stream.close()
-        p.terminate()
-
-        # Combine the audio frames into a single array for transcription
-        if frames:
-            audio_data = np.frombuffer(b"".join(frames), dtype=int16)
-
-            # Transcribe the audio using faster-whisper
-            segments, info = self.model.transcribe(audio_data)
-
-            # Collect the transcription into the list
-            for segment in segments:
-                # print(f"Transcription: {segment.text}")
-                transcribed_text.append(segment.text)
-
-        if transcribed_text:
-            return " ".join(transcribed_text)  # Return the transcribed text as a single string
-
-            
-    def dynamic_threshold(self, rms_values, factor=1.5):
-        """Adjust noise threshold dynamically based on the median RMS."""
-        median_rms = np.median(rms_values)
-        return median_rms * factor
+        return audio_data, ambient_noise_data
     
-    def stream_output(self, text):
-        import urllib.parse
-        # Example parameters
-        voice = "maxheadroom_00000045.wav"
-        language = "en"
-        output_file = "stream_output.wav"
+    def apply_noise_cancellation(self, audio_data, ambient_noise):
+        """Apply noise cancellation to the given audio data, using ambient noise from the first 2 seconds."""
+        # Convert to NumPy array (normalize to [-1, 1])
+        audio_np = np.frombuffer(audio_data, np.int16).astype(np.float32) / 32768.0
+        ambient_noise_np = np.frombuffer(ambient_noise, np.int16).astype(np.float32) / 32768.0
+
+        # Use ambient noise as noise profile
+        reduced_noise = nr.reduce_noise(y=audio_np, sr=self.sample_rate, y_noise=ambient_noise_np)
+
+        # Convert back to int16 after noise reduction for compatibility with Whisper
+        reduced_noise_int16 = (reduced_noise * 32768).astype(np.int16)
+
+        return reduced_noise_int16.tobytes()  # Return as bytes
+
+    def transcribe(self, audio_data):
+        """Transcribe the audio data using the selected model."""
+        if self.model_name == "whisper":
+            # # Whisper expects float32 data
+            # # Convert int16 PCM back to float32
+            # audio_np = np.frombuffer(audio_data, np.int16).astype(np.float32) / 32768.0
+            # # Transcribe using Whisper model
+            # segments, _ = self.whisper_model.transcribe(audio_np, beam_size=5)
+            # transcription = " ".join([segment.text for segment in segments])
+            # print(f"Whisper Transcription: {transcription}")
+            # return transcription
+            # Whisper expects float32 data
+            energy_threshold=0.001
+            audio_np = np.frombuffer(audio_data, np.int16).astype(np.float32) / 32768.0
+
+            # Calculate energy of the audio to determine if it should be transcribed
+            energy = np.mean(np.abs(audio_np))
+
+            # Only transcribe if energy exceeds the threshold
+            if energy > energy_threshold:
+                # print(f"Audio energy ({energy}) exceeds threshold ({energy_threshold}), proceeding with transcription.")
+                segments, _ = self.whisper_model.transcribe(audio_np, beam_size=5)
+                transcription = " ".join([segment.text for segment in segments])
+                print(f"Whisper Transcription: {transcription}")
+                return transcription
+            else:
+                # print(f"Audio energy ({energy}) is below the threshold ({energy_threshold}), skipping transcription.")
+                return ""
+        elif self.model_name == "vosk":
+            # Convert audio data to bytes for Vosk
+            if self.recognizer.AcceptWaveform(audio_data):
+                result = self.recognizer.Result()
+                print(f"Vosk Transcription: {result}")
+                return result
+        else:
+            # Fallback to default recognizer (for example, speech_recognition module)
+            recognizer = sr.Recognizer()
+            with sr.AudioFile(audio_data) as source:
+                audio = recognizer.record(source)
+                try:
+                    transcription = recognizer.recognize_google(audio)
+                    print(f"Google Transcription: {transcription}")
+                    return transcription
+                except sr.UnknownValueError:
+                    print("Google could not understand audio")
+                except sr.RequestError as e:
+                    print(f"Could not request results; {e}")
+
+    def listen(self, time_listen=8):
+        """Main transcoder function that handles listening, noise cancellation, and transcription."""
+        # Listen to the microphone and get both raw audio and ambient noise
+        raw_audio, ambient_noise = self.listen_to_microphone(time_listen)
         
-        # Encode the text for URL
-        encoded_text = urllib.parse.quote(text)
+        # Apply noise cancellation using the ambient noise from the first 2 seconds
+        clean_audio = self.apply_noise_cancellation(raw_audio, ambient_noise=ambient_noise)
         
-        # Create the streaming URL
-        streaming_url = f"http://localhost:7851/api/tts-generate-streaming?text={encoded_text}&voice={voice}&language={language}&output_file={output_file}"
+        # Transcribe the clean audio
+        transcription = self.transcribe(clean_audio)
         
-        # Create and play the audio stream using VLC
-        player = vlc.MediaPlayer(streaming_url)
-        
-        def on_end_reached(event):
-            print("End of stream reached.")
-            player.stop()
-        
-        # Attach event to detect when the stream ends
-        event_manager = player.event_manager()
-        event_manager.event_attach(vlc.EventType.MediaPlayerEndReached, on_end_reached)
-        
-        # Start playing the stream
-        player.play()
-        
-        # Keep the script running to allow the stream to play
-        while True:
-            state = player.get_state()
-            if state in [vlc.State.Ended, vlc.State.Stopped, vlc.State.Error]:
-                break
-            time.sleep(1)
-          
+        return transcription
+
     def glitch_stream_output(self, text):
         def change_pitch(sound, octaves):
             val = random.randint(0, 10)
@@ -279,8 +221,7 @@ class Speak:
             self.engine.say(text)
             self.engine.runAndWait()
             
-
-# sp = Speak()
-# sp.glitch_stream_output2("this is a test of pitch and stutter. test 1 2 3. I just need a long enough sentence to see the frequecy of sound changes.")
-
-# print(sp.listen3())
+# Example usage:
+# sp = Speak(model="vosk")  # or "vosk" or "google"
+# transcription = sp.transcoder(time_listen=10)
+# print("Final Transcription:", transcription)
