@@ -6,7 +6,7 @@ this is a personal project to create a voice directed digital assistant based on
 
 written in python, using langchain, langgraph, etc.
 
-written to work on Windows. Agent and logic will run on linux but tools are currently windows only.
+written to work on Windows. Agent and logic will run on linux but some tools are currently windows only.
 
 it currently will respond as an LLM like usual, but also has the following capabilities:
 
