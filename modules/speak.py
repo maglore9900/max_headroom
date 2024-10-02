@@ -17,7 +17,7 @@ class Speak:
         self.microphone = sr.Microphone()
         self.engine = pyttsx3.init()
         self.engine.setProperty('rate', 150)
-        self.model_name = model
+        self.model_name = model.lower()
         self.sample_rate = 16000
         self.chunk_size = 1024
         self.noise_threshold = 500
