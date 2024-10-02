@@ -10,6 +10,7 @@ written to work on Windows. Agent and logic will run on linux but some tools are
 
 it currently will respond as an LLM like usual, but also has the following capabilities:
 
+- custom prompt options
 - can also control spotify
 - can open applications on windows
 - can change the focused window
@@ -66,3 +67,7 @@ this tool will open an application. when you run max it will create an index of 
 this tool will set a timer with a popup. you tell max to set a time for X time, it will convert it to seconds on the backend and create the timer.
 
 the default timer will have a "clippy" popup, with potentially custom text
+
+# Custom Prompt
+
+Max Headroom is the default prompt. If you want to make a custom prompt look in modules/prompts.py and add it there. then set the name in .env

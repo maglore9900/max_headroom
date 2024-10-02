@@ -221,6 +221,67 @@ class Speak:
             self.engine.say(text)
             self.engine.runAndWait()
             
+    def stream(self, text):
+        # Example parameters
+        voice = ""
+        language = "en"
+        output_file = "stream_output.wav"
+        
+        # Encode the text for URL
+        encoded_text = urllib.parse.quote(text)
+        
+        # Create the streaming URL
+        streaming_url = f"http://localhost:7851/api/tts-generate-streaming?text={encoded_text}&voice={voice}&language={language}&output_file={output_file}"
+        
+        try:
+            # Stream the audio data
+            response = requests.get(streaming_url, stream=True)
+            
+            # Initialize PyAudio
+            p = pyaudio.PyAudio()
+            stream = None
+            
+            # Process the audio stream in chunks
+            chunk_size = 1024 * 6  # Adjust chunk size if needed
+            audio_buffer = b''
+
+            for chunk in response.iter_content(chunk_size=chunk_size):
+                audio_buffer += chunk
+
+                if len(audio_buffer) < chunk_size:
+                    continue
+                
+                audio_segment = AudioSegment(
+                    data=audio_buffer,
+                    sample_width=2,  # 2 bytes for 16-bit audio
+                    frame_rate=24000,  # Assumed frame rate, adjust as necessary
+                    channels=1  # Assuming mono audio
+                )
+
+                if stream is None:
+                    # Define stream parameters without any modifications
+                    stream = p.open(format=pyaudio.paInt16,
+                                    channels=1,
+                                    rate=audio_segment.frame_rate,
+                                    output=True)
+
+                # Play the original chunk (without any modification)
+                stream.write(audio_segment.raw_data)
+
+                # Reset buffer
+                audio_buffer = b''
+
+            # Final cleanup
+            if stream:
+                stream.stop_stream()
+                stream.close()
+            p.terminate()
+            
+        except:
+            self.engine.say(text)
+            self.engine.runAndWait()
+
+            
 # Example usage:
 # sp = Speak(model="vosk")  # or "vosk" or "google"
 # transcription = sp.transcoder(time_listen=10)

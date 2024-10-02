@@ -11,7 +11,6 @@ asyncio.set_event_loop(loop)
 
 
 if os.name == "nt":
-    print("windows")
     op = "windows"
 elif os.name == "posix":
     # Further check to differentiate between Linux and macOS
@@ -38,4 +37,5 @@ while True:
         response = loop.run_until_complete(graph.invoke_agent(text))
         if response:
             graph.spk.glitch_stream_output(response)
+            # graph.spk.stream(response)
     
