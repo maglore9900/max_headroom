@@ -90,4 +90,6 @@ If you want to modify the wake word look in main.py, you will see the logic wher
 
 ## Speech
 
-Max has a unique stutter glitch and I recreated this by modifying the voice stream as its being received. If you want to use all-talk with a different model or just dont want glitchiness then comment out `
+Max has a unique stutter glitch and I recreated this by modifying the voice stream as its being received. If you want to use all-talk with a different model or just dont want glitchiness then comment out `graph.spk.glitch_stream_output(response)` in main.py and uncomment `graph.spk.stream(response)`.
+
+for a custom voice selection look at `modules/speak.py` under the function `stream` and set the voice model there. I will probably make this easier, aka in the .env at some point.
