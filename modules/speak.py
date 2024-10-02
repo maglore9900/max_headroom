@@ -23,12 +23,7 @@ class Speak:
         self.noise_threshold = 500
         
         # Initialize transcription models
-        if self.model_name == "vosk":
-            from vosk import Model, KaldiRecognizer
-            self.model_path = os.path.join(os.path.dirname(__file__), "../models/vosk-model-en-us-0.42-gigaspeech")
-            self.model = Model(self.model_path)
-            self.recognizer = KaldiRecognizer(self.model, 16000)
-        elif self.model_name == "whisper":
+        if self.model_name == "whisper":
             from faster_whisper import WhisperModel
             self.whisper_model_path = "large-v2"
             self.whisper_model = WhisperModel(self.whisper_model_path, device="cuda")  # Mvidia GPU mode
@@ -104,12 +99,6 @@ class Speak:
             else:
                 # print(f"Audio energy ({energy}) is below the threshold ({energy_threshold}), skipping transcription.")
                 return ""
-        elif self.model_name == "vosk":
-            # Convert audio data to bytes for Vosk
-            if self.recognizer.AcceptWaveform(audio_data):
-                result = self.recognizer.Result()
-                print(f"Vosk Transcription: {result}")
-                return result
         else:
             # Fallback to default recognizer (for example, speech_recognition module)
             recognizer = sr.Recognizer()
@@ -223,6 +212,6 @@ class Speak:
             self.engine.runAndWait()
             
 # Example usage:
-# sp = Speak(model="vosk")  # or "vosk" or "google"
+# sp = Speak(model="whisper")  # or "whisper" or "google"
 # transcription = sp.transcoder(time_listen=10)
 # print("Final Transcription:", transcription)
