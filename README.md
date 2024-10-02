@@ -48,7 +48,7 @@ you can find information on getting that information here: https://developer.spo
 
 max can take the following commands: play, pause, stop, next, previous, favorite
 
-`max play spotify` for example
+`hey max play spotify` for example
 
 ***note: you can say really any words that are similiar, max will attempt to read your intent and use the right command**
 
@@ -56,7 +56,7 @@ max can take the following commands: play, pause, stop, next, previous, favorite
 
 this tool brings the focus of whatever app you name to the front, it will not open an app
 
-`max show obisidian` for example
+`hey max show obisidian` for example
 
 ***note: only works on windows**
 
@@ -64,7 +64,7 @@ this tool brings the focus of whatever app you name to the front, it will not op
 
 this tool will open an application. when you run max it will create an index of the apps installed on your system
 
-`max open obsidian` for example
+`hey max open obsidian` for example
 
 ***note: only works on windows**
 
@@ -74,8 +74,20 @@ this tool will set a timer with a popup. you tell max to set a time for X time, 
 
 the default timer will have a "clippy" popup, with potentially custom text
 
-`max set timer 2 hours` for example
+`hey max set timer 2 hours` for example
 
-# Custom Prompt
+# Customization
+
+## Prompt
 
 Max Headroom is the default prompt. If you want to make a custom prompt look in modules/prompts.py and add it there. then set the name in .env
+
+## Alert Phrase/Wake Word
+
+Max is set up for "Hey Max" as the wake word. I didnt love "hey max" as opposed to just "max" but the number of times he got invoked randomly became rediculous.
+
+If you want to modify the wake word look in main.py, you will see the logic where it looks at the speech to text detected and looks for the key words. you can make this whatever you want
+
+## Speech
+
+Max has a unique stutter glitch and I recreated this by modifying the voice stream as its being received. If you want to use all-talk with a different model or just dont want glitchiness then comment out `
