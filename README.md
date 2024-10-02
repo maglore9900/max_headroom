@@ -48,17 +48,23 @@ you can find information on getting that information here: https://developer.spo
 
 max can take the following commands: play, pause, stop, next, previous, favorite
 
+`max play spotify` for example
+
 ***note: you can say really any words that are similiar, max will attempt to read your intent and use the right command**
 
 ## Window Focus
 
 this tool brings the focus of whatever app you name to the front, it will not open an app
 
+`max show obisidian` for example
+
 ***note: only works on windows**
 
 ## Open App
 
 this tool will open an application. when you run max it will create an index of the apps installed on your system
+
+`max open obsidian` for example
 
 ***note: only works on windows**
 
@@ -67,6 +73,8 @@ this tool will open an application. when you run max it will create an index of 
 this tool will set a timer with a popup. you tell max to set a time for X time, it will convert it to seconds on the backend and create the timer.
 
 the default timer will have a "clippy" popup, with potentially custom text
+
+`max set timer 2 hours` for example
 
 # Custom Prompt
 
