@@ -33,7 +33,7 @@ so basically the steps are pretty simple
 - install python 3.10 on the system
 - create a virtual environment using `python -m venv .` in the folder/dir of the code
 - activate the environment with `Scripts\activate.bat` on windows or `source bin/activate` on linux
-- run pip install to install all the required modules `pip install -r requirements.txt`
+- run pip install to install all the required modules `pip install -r requirements_windows.txt`
 - then copy example_env.txt to `.env`
 - open that, and put in your info, like openai key or ollama or whatever
 - then run `python main.py` to start the whole thing up
