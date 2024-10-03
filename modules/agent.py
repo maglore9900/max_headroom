@@ -20,7 +20,8 @@ class Agent:
         self.spk = speak.Speak(env)
         self.prompt = hub.pull("hwchase17/openai-functions-agent")
         self.char = env("CHARACTER").lower()
-        self.char_prompt = getattr(prompts, self.char, "You are a helpful assistant. User Query: {query}")
+        self.char_prompt = getattr(prompts, self.char, "You are a helpful assistant.")
+        self.char_prompt = self.char_prompt + "\nAnswer the following request: {query}"
 
         
 
