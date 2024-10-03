@@ -30,7 +30,7 @@ while True:
     text = graph.spk.listen()
     # if text:
         # print(f"User: {text}")
-    if text and "hey" in text.lower() and env("CHARACTER") in text.lower():
+    if text and "hey" in text.lower() and env("CHARACTER").lower() in text.lower():
         if "exit" in text.lower():
             break
         print("agent invoked")
