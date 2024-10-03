@@ -23,7 +23,7 @@ this is a fun work in progress. if you want to use it and or develop for it be m
 >
 > 1. this will work with openai or ollama models. you will need to set up the .env for that as well as spotify
 > 2. this is designed to pull a custom voice from the [alltalk project](https://github.com/erew123/alltalk_tts), that is how I am cloning max headroom's voice. You can alter or simply not use this, it will currently fallback to pyttsx3 aka a robot voice
-> 3. speech-to-text can use google, or faster-whisper. faster-whisper is currently the default and optimal method.
+> 3. speech-to-text can use google, or faster-whisper. google is currently the default because it requires less set up, but faster-whisper is the better solution.
 
 # INSTALLATION
 
@@ -43,7 +43,12 @@ so basically the steps are pretty simple
 >
 > Instructions are [Here](docs/cuda.md)
 >
-> If this seems too complicated you can change Max to use google for speech-to-text instead in the .env
+> If this seems too complicated you can just leave it at its default, which will use google for speech-to-text
+
+# Configuration
+
+All of the easy configuration is done in the .env file. This section will explain what the values do, although you will also find it in the [example_env.txt](example_env.txt)
+
 
 # TOOLS
 
@@ -88,6 +93,10 @@ the default timer will have a "clippy" popup, with potentially custom text
 ## Prompt
 
 Max Headroom is the default prompt. If you want to make a custom prompt look in modules/prompts.py and add it there. then set the name in .env
+
+When you create a prompt in the prompts.py file the name of the prompt (the variable name) is what you put in the .env file, and it will be the wake word that its listening for.
+
+> Example: you create a new prompt and name it Ted, the new wake phrase is "Hey Ted"
 
 ## Alert Phrase/Wake Word
 
