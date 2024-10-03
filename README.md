@@ -49,6 +49,31 @@ so basically the steps are pretty simple
 
 All of the easy configuration is done in the .env file. This section will explain what the values do, although you will also find it in the [example_env.txt](example_env.txt)
 
+#LLM_TYPE will take openai, local. Local will use Ollama
+`LLM_TYPE = 'openai'`
+
+#-----OpenAI variables
+`OPENAI_API_KEY = ''`
+`OPENAI_MODEL = 'gpt-4o-mini'`
+
+#-----Ollama variables
+#OLLAMA_MODEL will take any model you can load in ollama
+`OLLAMA_MODEL = 'gemma2'`
+`OLLAMA_URL = 'http://localhost:11434'`
+
+#-----Customization Variables
+#CHARACTER will take any character prompt you have in the [modules/prompts.py](modules/prompts.py) file. 'max' or 'none' are the default options
+`CHARACTER = 'max'`
+
+#LISTEN_MODEL will take whisper or google, whisper is the best option but requires additional setup with Nvidia drivers
+`LISTEN_MODEL='google'`
+#STREAM SPEAK URL is using the default url for Alltalk. If you dont have all talk you can ignore this, if you want to use a different service, simply replace the url
+`STREAM_SPEAK_URL = 'http://127.0.0.1:7851/api/tts-generate'`
+
+#-----Spotify, if you want Max to be able to control spotify this is where you will put your credentials
+`SPOTIFY_CLIENT_ID = ''`
+`SPOTIFY_CLIENT_SECRET = ''`
+`SPOTIFY_REDIRECT_URI = 'http://localhost:8888/callback'`
 
 # TOOLS
 
@@ -56,7 +81,7 @@ All of the easy configuration is done in the .env file. This section will explai
 
 you will need get your spotify credentials in order to have Max control your spotify software.
 
-you can find information on getting that information here: https://developer.spotify.com/documentation/web-api/concepts/apps
+you can find information on getting that information here: `https://developer.spotify.com/documentation/web-api/concepts/apps`
 
 max can take the following commands: play, pause, stop, next, previous, favorite
 
@@ -92,7 +117,7 @@ the default timer will have a "clippy" popup, with potentially custom text
 
 ## Prompt
 
-Max Headroom is the default prompt. If you want to make a custom prompt look in modules/prompts.py and add it there. then set the name in .env
+Max Headroom is the default prompt. If you want to make a custom prompt look in [modules/prompts.py](modules/prompts.py) and add it there. then set the name in .env
 
 When you create a prompt in the prompts.py file the name of the prompt (the variable name) is what you put in the .env file, and it will be the wake word that its listening for.
 
@@ -100,9 +125,7 @@ When you create a prompt in the prompts.py file the name of the prompt (the vari
 
 ## Alert Phrase/Wake Word
 
-Max is set up for "Hey Max" as the wake word. I didnt love "hey max" as opposed to just "max" but the number of times he got invoked randomly became rediculous.
-
-If you want to modify the wake word look in main.py, you will see the logic where it looks at the speech to text detected and looks for the key words. you can make this whatever you want
+Max is set up for "Hey Max" as the wake word. I didnt love "hey max" as opposed to just "max" but the number of times he got invoked randomly became rediculous. To modify see the above section for custom Prompts.
 
 ## Speech
 
