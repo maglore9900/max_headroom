@@ -8,6 +8,8 @@ import random
 import urllib.parse
 import requests
 from pydub import AudioSegment
+import io
+import wave
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
@@ -75,16 +77,8 @@ class Speak:
     def transcribe(self, audio_data):
         """Transcribe the audio data using the selected model."""
         if self.model_name == "whisper":
-            # # Whisper expects float32 data
-            # # Convert int16 PCM back to float32
-            # audio_np = np.frombuffer(audio_data, np.int16).astype(np.float32) / 32768.0
-            # # Transcribe using Whisper model
-            # segments, _ = self.whisper_model.transcribe(audio_np, beam_size=5)
-            # transcription = " ".join([segment.text for segment in segments])
-            # print(f"Whisper Transcription: {transcription}")
-            # return transcription
             # Whisper expects float32 data
-            energy_threshold=0.001
+            energy_threshold = 0.001
             audio_np = np.frombuffer(audio_data, np.int16).astype(np.float32) / 32768.0
 
             # Calculate energy of the audio to determine if it should be transcribed
@@ -92,18 +86,30 @@ class Speak:
 
             # Only transcribe if energy exceeds the threshold
             if energy > energy_threshold:
-                # print(f"Audio energy ({energy}) exceeds threshold ({energy_threshold}), proceeding with transcription.")
                 segments, _ = self.whisper_model.transcribe(audio_np, beam_size=5)
                 transcription = " ".join([segment.text for segment in segments])
                 print(f"Whisper Transcription: {transcription}")
                 return transcription
             else:
-                # print(f"Audio energy ({energy}) is below the threshold ({energy_threshold}), skipping transcription.")
                 return ""
         else:
-            # Fallback to default recognizer (for example, speech_recognition module)
+            # Convert raw audio_data to PCM WAV format using an in-memory buffer
             recognizer = sr.Recognizer()
-            with sr.AudioFile(audio_data) as source:
+
+            # Convert audio_data to a WAV file in memory
+            audio_buffer = io.BytesIO()
+
+            with wave.open(audio_buffer, 'wb') as wav_file:
+                wav_file.setnchannels(1)  # Assuming mono audio
+                wav_file.setsampwidth(2)  # Assuming 16-bit audio
+                wav_file.setframerate(16000)  # Assuming 16kHz sample rate
+                wav_file.writeframes(audio_data)  # Write raw PCM data
+
+            # Reset the buffer's position to the start
+            audio_buffer.seek(0)
+
+            # Use SpeechRecognition's AudioFile to handle the in-memory WAV file
+            with sr.AudioFile(audio_buffer) as source:
                 audio = recognizer.record(source)
                 try:
                     transcription = recognizer.recognize_google(audio)
@@ -111,8 +117,10 @@ class Speak:
                     return transcription
                 except sr.UnknownValueError:
                     print("Google could not understand audio")
+                    return ""
                 except sr.RequestError as e:
                     print(f"Could not request results; {e}")
+                    return ""
 
     def listen(self, time_listen=8):
         """Main transcoder function that handles listening, noise cancellation, and transcription."""
