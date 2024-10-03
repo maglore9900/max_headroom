@@ -1,5 +1,7 @@
 this is a personal project to create a voice directed digital assistant based on the max headroom character.
 
+that being said, I have added a lot of customization, so you can create your own characters, and use it how you would like. 
+
 ![alt text](https://www.cartoonbrew.com/wp-content/uploads/2013/05/maxheadroom_main-1280x600.jpg)
 
 # SUMMARY
