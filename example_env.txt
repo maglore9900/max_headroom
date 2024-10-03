@@ -1,6 +1,6 @@
-OPENAI_API_KEY = ''
-#LLM_TYPE will take openai, local
+#LLM_TYPE will take openai, local. Local will use Ollama
 LLM_TYPE = 'openai' 
+OPENAI_API_KEY = ''
 OPENAI_MODEL = 'gpt-4o-mini'
 #OLLAMA_MODEL will take any model you can load in ollama
 OLLAMA_MODEL = 'gemma2' 

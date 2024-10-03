@@ -11,32 +11,50 @@ written to work on Windows. Agent and logic will run on linux but some tools are
 it currently will respond as an LLM like usual, but also has the following capabilities:
 
 - custom prompt options
-- can also control spotify
-- can open applications on windows
-- can change the focused window
+- control spotify
+- open applications (windows only)
+- change the focused (window only)
 - set timer
 - coming soon:  journalling in markdown, with a save target for obsidian
 
 this is a fun work in progress. if you want to use it and or develop for it be my guest. would love to have more tools designed.
 
-Note:
-
-1) this will work with openai or ollama models. you will need to set up the .env for that as well as spotify
-2) this is designed to pull a custom voice from the [alltalk project https://github.com/erew123/alltalk_tts, that is how I am cloning max headroom's voice. You can alter or simply not use this, it will currently fallback to pyttsx3 aka a robot voice.
-3) speech-to-text can use google, or faster-whisper. faster-whisper is currently the default and optimal method.
+> Note:
+>
+> 1. this will work with openai or ollama models. you will need to set up the .env for that as well as spotify
+> 2. this is designed to pull a custom voice from the [alltalk project](https://github.com/erew123/alltalk_tts), that is how I am cloning max headroom's voice. You can alter or simply not use this, it will currently fallback to pyttsx3 aka a robot voice
+> 3. speech-to-text can use google, or faster-whisper. faster-whisper is currently the default and optimal method.
 
 # INSTALLATION
 
 so basically the steps are pretty simple
 
-- download the code (clone it or download it and unzip it)
-- install python 3.10 on the system
-- create a virtual environment using `python -m venv .` in the folder/dir of the code
-- activate the environment with `Scripts\activate.bat` on windows or `source bin/activate` on linux
-- run pip install to install all the required modules `pip install -r requirements_windows.txt`
-- then copy example_env.txt to `.env`
-- open that, and put in your info, like openai key or ollama or whatever
-- then run `python main.py` to start the whole thing up
+1. download the code (clone it or download it and unzip it)
+2. install python 3.10 on the system
+3. create a virtual environment using `python -m venv .` in the folder/dir of the code
+4. activate the environment with `Scripts\activate.bat` on windows or `source bin/activate` on linux
+5. run pip install to install all the required modules `pip install -r requirements_windows.txt`
+6. then `cp example_env.txt to .env`
+7. open that, and put in your info, like openai key or ollama or whatever
+8. If you are using an Nvidia GPU and dont already have the CUDA toolkit and such, see note below
+9. then run `python main.py` to start the whole thing up
+
+> Note: If you are using faster-whisper and have an nvidia GPU you will need to download the cuda tool kit and cudann to leverage your GPU.
+>
+> If this seems too complicated you can change Max to use google for speech-to-text instead in the .env
+>
+> 1. download the cuda toolkit: `https://developer.nvidia.com/cuda-downloads`
+> 2. download cudann: `https://developer.nvidia.com/cudnn-downloads`
+> 3. unzip cudann and copy all of the .dll files
+> 4. paste the .dll files in the toolkit\cuda\bin folder (for example: `C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\bin`)
+> 5. now we need to add those .dll's to your PATH, to do this hit the windows key and type "enviro",
+> 6. select "edit the system environment variables"
+> 7. select button on the bottom right "Environment Variables"
+> 8. in the lower window "System variables" find and select "Path"
+> 9. select "Edit"
+> 10. select "Browse"
+> 11. browse to the same location as step 4, where you just put the .dll files
+> 12. then select a ok a bunch of times and close out the menu
 
 # TOOLS
 
@@ -48,25 +66,25 @@ you can find information on getting that information here: https://developer.spo
 
 max can take the following commands: play, pause, stop, next, previous, favorite
 
-`hey max play spotify` for example
+> Example: `hey max play spotify`
 
-***note: you can say really any words that are similiar, max will attempt to read your intent and use the right command**
+> Note: you can say really any words that are similiar, max will attempt to read your intent and use the right command
 
 ## Window Focus
 
 this tool brings the focus of whatever app you name to the front, it will not open an app
 
-`hey max show obisidian` for example
+> Example: `hey max show obisidian`
 
-***note: only works on windows**
+> Note: only works on windows
 
 ## Open App
 
 this tool will open an application. when you run max it will create an index of the apps installed on your system
 
-`hey max open obsidian` for example
+> Example: `hey max open obsidian`
 
-***note: only works on windows**
+> Note: only works on windows
 
 ## Timer
 
@@ -74,7 +92,7 @@ this tool will set a timer with a popup. you tell max to set a time for X time, 
 
 the default timer will have a "clippy" popup, with potentially custom text
 
-`hey max set timer 2 hours` for example
+> Example: `hey max set timer 2 hours`
 
 # Customization
 
