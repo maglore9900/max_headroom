@@ -22,7 +22,7 @@ this is a fun work in progress. if you want to use it and or develop for it be m
 Note:
 
 1) this will work with openai or ollama models. you will need to set up the .env for that as well as spotify
-2) this is designed to pull a custom voice from the alltalk project https://github.com/erew123/alltalk_tts, that is how I am cloning max headroom's voice. You can alter or simply not use this, it will currently fallback to pyttsx3 aka a robot voice.
+2) this is designed to pull a custom voice from the [alltalk project https://github.com/erew123/alltalk_tts, that is how I am cloning max headroom's voice. You can alter or simply not use this, it will currently fallback to pyttsx3 aka a robot voice.
 3) speech-to-text can use google, or faster-whisper. faster-whisper is currently the default and optimal method.
 
 # INSTALLATION
