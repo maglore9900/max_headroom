@@ -28,7 +28,7 @@ class Adapter:
                 "answer the following request: {topic}"
             )
             self.llm_chat = ChatOllama(
-                base_url="http://10.0.0.231:11434", model=llm_model
+                base_url=env("OLLAMA_URL"), model=llm_model
             )
             model_name = "BAAI/bge-small-en"
             model_kwargs = {"device": "cpu"}
