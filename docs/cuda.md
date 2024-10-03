@@ -9,9 +9,9 @@ If this seems too complicated you can change Max to use google for speech-to-tex
 7. select "edit the system environment variables"
 8. select button on the bottom right "Environment Variables"
 9. in the lower window "System variables" find and select "Path"
-   ![](images/windows_env.png)
+   ![](../images/windows_env.png)
 10. select "Edit"
 11. select "Browse"
 12. browse to the same location as step 4, where you just put the .dll files
-    ![](images/path.png)
+    ![](../images/path.png)
 13. then select a ok a bunch of times and close out the menu
