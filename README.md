@@ -69,8 +69,12 @@ All of the easy configuration is done in the .env file. This section will explai
 
 #LISTEN_MODEL will take whisper or google, whisper is the best option but requires additional setup with Nvidia drivers
 `LISTEN_MODEL='google'`
-#STREAM SPEAK URL is using the default url for Alltalk. If you dont have all talk you can ignore this, if you want to use a different service, simply replace the url
-`STREAM_SPEAK_URL = 'http://127.0.0.1:7851/api/tts-generate'`
+
+#TIME_LISTEN is the interval in seconds that the mic is running before adjusting for noise level. If you are talking and getting cut off by the mic cycling, you will want to make this longer. If you listen to music a lot you will want it around its default value of 10 seconds
+
+`TIME_LISTEN = '10'`
+
+ #STREAM SPEAK URL is using the default url for Alltalk. If you dont have all talk you can ignore this, if you want to use a different service, simply replace the url `STREAM_SPEAK_URL = 'http://127.0.0.1:7851/api/tts-generate'`
 
 #-----Spotify, if you want Max to be able to control spotify this is where you will put your credentials
 `SPOTIFY_CLIENT_ID = ''`
