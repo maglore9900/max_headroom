@@ -211,8 +211,9 @@ class Agent:
         agent_out = answer.get('agent_out')
         output_value = agent_out.return_values.get('output', None)
         max = self.llm.invoke(self.char_prompt.format(query=output_value))
-        # print(f"max: {max.content}")
         return {"agent_out": max.content}
+        # for chunk in self.llm.stream(self.char_prompt.format(query=output_value)):
+        #     yield(chunk)
     
     async def rag_final_answer(self, state: list):
         print("> rag final_answer")
