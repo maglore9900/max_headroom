@@ -77,8 +77,9 @@ class Speak:
     def transcribe(self, audio_data):
         """Transcribe the audio data using the selected model."""
         if self.model_name == "whisper":
-            # Whisper expects float32 data
-            energy_threshold = 0.001
+            # Whisper expects float32 audio data
+            energy_threshold = 0.0001
+            # Convert int16 PCM audio data to float32
             audio_np = np.frombuffer(audio_data, np.int16).astype(np.float32) / 32768.0
 
             # Calculate energy of the audio to determine if it should be transcribed
@@ -86,17 +87,17 @@ class Speak:
 
             # Only transcribe if energy exceeds the threshold
             if energy > energy_threshold:
+                # Transcribe using Whisper model (assumed to be already loaded in self.whisper_model)
                 segments, _ = self.whisper_model.transcribe(audio_np, beam_size=5)
                 transcription = " ".join([segment.text for segment in segments])
                 print(f"Whisper Transcription: {transcription}")
                 return transcription
             else:
+                print("Audio energy below threshold; no transcription performed.")
                 return ""
         else:
-            # Convert raw audio_data to PCM WAV format using an in-memory buffer
+            # Google SpeechRecognition code (no changes here)
             recognizer = sr.Recognizer()
-
-            # Convert audio_data to a WAV file in memory
             audio_buffer = io.BytesIO()
 
             with wave.open(audio_buffer, 'wb') as wav_file:
@@ -121,6 +122,7 @@ class Speak:
                 except sr.RequestError as e:
                     print(f"Could not request results; {e}")
                     return ""
+
 
     def listen(self, time_listen=8):
         """Main transcoder function that handles listening, noise cancellation, and transcription."""
