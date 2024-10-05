@@ -214,31 +214,7 @@ class Agent:
         return {"agent_out": max.content}
         # for chunk in self.llm.stream(self.char_prompt.format(query=output_value)):
         #     yield(chunk)
-    
-    async def rag_final_answer(self, state: list):
-        print("> rag final_answer")
-        print(f"state: {state}")
-        try:
-            #! if AgentFinish and no intermediate steps then return the answer without rag_final_answer (need to develop)
-            context = state.get("agent_out").return_values['output']
-            if not context:
-                context = state.get("agent_out")['answer']
-            if not context:
-                context = state.get("intermediate_steps")[-1] 
-        except:
-            context = ""
-        if "return_values" in str(state.get("agent_out")) and state["intermediate_steps"] == []:
-            print("bypassing rag_final_answer")
-            print(f"context: {context}")
-            return {"agent_out": {"answer":context, "source": "Quick Response"}}
-        else:
-            prompt = f"You are a helpful assistant, Ensure the answer to user's question is in natural language, using the context provided.\n\nCONTEXT: {context}\nQUESTION: {state['input']}"
-            loop = asyncio.get_running_loop()
-            # Run the synchronous method in an executor
-            out = await loop.run_in_executor(None, self.final_answer_llm.invoke, prompt)
-            function_call = out.additional_kwargs["tool_calls"][-1]["function"]["arguments"]
-            return {"agent_out": function_call}
-
+        
     async def router(self, state):
         print("> router")
         print(f"----router agent state: {state}")
