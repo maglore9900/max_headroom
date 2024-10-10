@@ -27,7 +27,7 @@ class Speak:
         self.noise_threshold = 500  # Initial placeholder for noise threshold
         self.recent_noise_levels = deque(maxlen=30)  # Track recent noise levels for dynamic adjustment
         self.voice = env("ALL_TALK_VOICE")
-        self.silence = int(env("TIME_SILENCE"))
+        self.silence = float(env("TIME_SILENCE"))
 
         # Initialize transcription models
         if self.model_name == "whisper":
