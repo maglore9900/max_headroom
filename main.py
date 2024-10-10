@@ -27,7 +27,8 @@ else:
 graph = agent.Agent(env,op)
 
 while True:
-    text = graph.spk.listen(int(env("TIME_LISTEN")))
+    # text = graph.spk.listen(int(env("TIME_LISTEN")))
+    text = graph.spk.transcribe()
     # if text:
         # print(f"User: {text}")
     if text and "hey" in text.lower() and env("CHARACTER").lower() in text.lower():

@@ -1,6 +1,6 @@
 from typing import TypedDict, Annotated, List, Union
 import operator
-from modules import adapter, speak, prompts, spotify, app_launcher, windows_focus
+from modules import adapter, speak2, prompts, spotify, app_launcher, windows_focus
 from langchain_core.agents import AgentAction, AgentFinish
 from langchain.agents import create_openai_tools_agent
 from langchain import hub
@@ -17,7 +17,7 @@ class Agent:
         self.ap = app_launcher.AppLauncher()
         self.wf = windows_focus.WindowFocusManager()
         self.llm = self.ad.llm_chat
-        self.spk = speak.Speak(env)
+        self.spk = speak2.Speak(env)
         self.prompt = hub.pull("hwchase17/openai-functions-agent")
         self.char = env("CHARACTER").lower()
         self.char_prompt = getattr(prompts, self.char, "You are a helpful assistant.")
@@ -148,7 +148,8 @@ class Agent:
         print("> journal_mode_tool")
         try:
             print("Listening for journal entries...")
-            text = self.spk.listen(30)
+            # text = self.spk.listen(30)
+            text = self.spk.transcribe()
             print(f"User: {text}")
             if text:
                 with open("journal.txt", "a") as file:
